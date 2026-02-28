@@ -55,18 +55,41 @@ export default function Admin({ products, addProduct, removeProduct }) {
         }
     }
 
+    const handleDeleteAll = async () => {
+        if (products.length === 0) return;
+        if (window.confirm(`⚠️ Are you SURE you want to delete all ${products.length} products? This cannot be undone.`)) {
+            try {
+                // Remove all concurrently
+                await Promise.all(products.map(product => removeProduct(product.id)));
+                alert('All products successfully deleted!');
+            } catch (error) {
+                console.error("Error deleting all products:", error);
+                alert("An error occurred while deleting some products.");
+            }
+        }
+    }
+
     return (
         <div className="admin-dashboard">
             <header className="admin-header">
                 <h2>🛠️ Store Administration</h2>
                 <p>Manage your inventory, prices, and categories from this dashboard.</p>
-                <button
-                    onClick={handleMigration}
-                    style={{ marginTop: '1rem', background: '#ec4899', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
-                    title="Setup button to instantly migrate initial mock data to your new database."
-                >
-                    Run Firebase Initial Data Upload
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button
+                        onClick={handleMigration}
+                        style={{ background: '#ec4899', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
+                        title="Setup button to instantly migrate initial mock data to your new database."
+                    >
+                        Run Firebase Initial Data Upload
+                    </button>
+                    <button
+                        onClick={handleDeleteAll}
+                        style={{ background: '#ef4444', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
+                        title="Warning: This deletes everything."
+                    >
+                        Delete All Items
+                    </button>
+                </div>
             </header>
 
             <div className="admin-content">
