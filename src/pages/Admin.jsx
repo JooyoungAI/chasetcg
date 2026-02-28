@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { runMigration } from '../migrateData';
 import './Admin.css';
 
-export default function Admin({ products, setProducts }) {
+export default function Admin({ products, addProduct, removeProduct }) {
     const [newProduct, setNewProduct] = useState({
         name: '',
         price: '',
@@ -15,34 +16,41 @@ export default function Admin({ products, setProducts }) {
         setNewProduct({ ...newProduct, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Create new product object
-        const addedProduct = {
+        const newProductData = {
             ...newProduct,
-            id: Date.now(), // Generate a simple unique ID
             price: parseFloat(newProduct.price) || 0
         };
 
-        // Add to main product state
-        setProducts([...products, addedProduct]);
+        // Add to Firebase / Main state
+        const success = await addProduct(newProductData);
 
-        // Reset form
-        setNewProduct({
-            name: '',
-            price: '',
-            category: 'sealed',
-            image: '',
-            description: ''
-        });
-
-        alert('Product successfully added!');
+        if (success) {
+            // Reset form
+            setNewProduct({
+                name: '',
+                price: '',
+                category: 'sealed',
+                image: '',
+                description: ''
+            });
+            alert('Product successfully added!');
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
-            setProducts(products.filter(p => p.id !== id));
+            await removeProduct(id);
+        }
+    }
+
+    const handleMigration = async () => {
+        if (window.confirm('This will upload 7 mock items to Firebase. Are you sure?')) {
+            const success = await runMigration();
+            if (success) alert('Migration complete! Refresh to see live data.');
         }
     }
 
@@ -51,6 +59,13 @@ export default function Admin({ products, setProducts }) {
             <header className="admin-header">
                 <h2>🛠️ Store Administration</h2>
                 <p>Manage your inventory, prices, and categories from this dashboard.</p>
+                <button
+                    onClick={handleMigration}
+                    style={{ marginTop: '1rem', background: '#ec4899', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
+                    title="Setup button to instantly migrate initial mock data to your new database."
+                >
+                    Run Firebase Initial Data Upload
+                </button>
             </header>
 
             <div className="admin-content">

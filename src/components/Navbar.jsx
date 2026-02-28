@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-export default function Navbar({ cart, theme, toggleTheme, toggleCart }) {
+export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUser, handleLogout }) {
     const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
     const location = useLocation();
 
@@ -34,9 +34,20 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart }) {
             </div>
 
             <div className="nav-actions">
-                <Link to="/admin" className="nav-link admin-link" aria-label="Admin Dashboard">
-                    ⚙️ Admin
-                </Link>
+                {currentUser ? (
+                    <>
+                        <Link to="/admin" className="nav-link admin-link" aria-label="Admin Dashboard">
+                            ⚙️ Dashboard
+                        </Link>
+                        <button onClick={handleLogout} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                            Log out
+                        </button>
+                    </>
+                ) : (
+                    <Link to="/admin" className="nav-link admin-link" aria-label="Admin Login">
+                        ⚙️ Admin
+                    </Link>
+                )}
                 <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
                     {theme === 'light' ? '🌙' : '☀️'}
                 </button>

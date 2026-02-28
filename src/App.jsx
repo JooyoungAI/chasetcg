@@ -4,7 +4,11 @@ import Navbar from './components/Navbar'
 import Catalog from './components/Catalog'
 import ShoppingCart from './components/ShoppingCart'
 import Admin from './pages/Admin'
+import Login from './pages/Login'
 import { catalogItems } from './data/mockItems'
+import { useProducts } from './hooks/useProducts'
+import { auth, isConfigured } from './firebase'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import './App.css'
 import './components/Navbar.css'
 
@@ -22,6 +26,10 @@ function CategoryPage({ items, addToCart }) {
     ? categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
     : "All Products"
 
+  if (items.length === 0) {
+    return <p style={{ textAlign: 'center', marginTop: '4rem' }}>Loading products...</p>
+  }
+
   return (
     <>
       <header className="catalog-header">
@@ -38,10 +46,32 @@ function CategoryPage({ items, addToCart }) {
 }
 
 function App() {
-  // We will lift the products up state so the Admin panel can modify it later
-  const [products, setProducts] = useState(catalogItems)
+  const { products, loading, addProduct, removeProduct } = useProducts()
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
+
+  // Auth State
+  const [authUser, setAuthUser] = useState(null)
+  const [mockAuthUser, setMockAuthUser] = useState(null)
+
+  useEffect(() => {
+    if (isConfigured && auth) {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setAuthUser(user)
+      })
+      return () => unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    if (isConfigured && auth) {
+      await signOut(auth)
+    } else {
+      setMockAuthUser(null)
+    }
+  }
+
+  const currentUser = isConfigured ? authUser : mockAuthUser
 
   // Theme state: defaults to 'light' or checking local storage
   const [theme, setTheme] = useState(() => {
@@ -105,13 +135,27 @@ function App() {
 
   return (
     <Router>
-      <Navbar cart={cart} theme={theme} toggleTheme={toggleTheme} toggleCart={toggleCart} />
+      <Navbar
+        cart={cart}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        toggleCart={toggleCart}
+        currentUser={currentUser}
+        handleLogout={handleLogout}
+      />
 
       <main className="main-content">
         <Routes>
           <Route path="/" element={<CategoryPage items={products} addToCart={addToCart} />} />
           <Route path="/category/:categoryId" element={<CategoryPage items={products} addToCart={addToCart} />} />
-          <Route path="/admin" element={<Admin products={products} setProducts={setProducts} />} />
+          <Route
+            path="/admin"
+            element={currentUser ? (
+              <Admin products={products} addProduct={addProduct} removeProduct={removeProduct} />
+            ) : (
+              <Login setMockAuthUser={setMockAuthUser} />
+            )}
+          />
         </Routes>
       </main>
 
