@@ -71,7 +71,19 @@ function App() {
     }
   }
 
-  const currentUser = isConfigured ? authUser : mockAuthUser
+  // Strictly enforce that only the owner email is considered an 'Admin'
+  const ADMIN_EMAIL = "jooyoung.kim.ai@gmail.com";
+  let currentUser = null;
+
+  if (isConfigured && authUser) {
+    if (authUser.email === ADMIN_EMAIL) {
+      currentUser = authUser;
+    }
+  } else if (!isConfigured && mockAuthUser) {
+    if (mockAuthUser.email === ADMIN_EMAIL || mockAuthUser.email === 'admin@chasetcg.com') {
+      currentUser = mockAuthUser;
+    }
+  }
 
   // Theme state: defaults to 'light' or checking local storage
   const [theme, setTheme] = useState(() => {

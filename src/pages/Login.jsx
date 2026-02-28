@@ -24,11 +24,11 @@ export default function Login({ setMockAuthUser }) {
             }
         } else {
             // Mock Auth Fallback when Firebase is not connected
-            if (email === 'admin@chasetcg.com' && password === 'password') {
+            if ((email === 'jooyoung.kim.ai@gmail.com' || email === 'admin@chasetcg.com') && password === 'ChaseTCG17~') {
                 setMockAuthUser({ uid: 'mock-admin-123', email });
                 navigate('/admin');
             } else {
-                setError('Firebase not configured. Use admin@chasetcg.com / password to bypass for testing.');
+                setError('Invalid credentials, or Firebase is not connected.');
             }
         }
     };
