@@ -62,7 +62,7 @@ export default function Home() {
                 </p>
 
                 <Link to="/shop" className="cta-button">
-                    Enter the Storefront
+                    Enter the Store
                 </Link>
             </div>
         </div>

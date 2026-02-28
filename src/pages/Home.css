@@ -82,7 +82,8 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    padding: 3rem;
+    padding: 2rem 2.5rem;
+    /* Reduced padding from 3rem */
     border-radius: 20px;
     background: var(--glass-bg);
     backdrop-filter: blur(8px);
@@ -102,9 +103,11 @@
 }
 
 .hero-title {
-    font-size: 4rem;
+    font-size: 3.5rem;
+    /* Slightly smaller to save space */
     font-weight: 800;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    /* Tighter margin */
     background: linear-gradient(135deg, var(--text-color), var(--accent-color));
     background-clip: text;
     -webkit-background-clip: text;
@@ -112,27 +115,35 @@
 }
 
 .hero-subtitle {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    /* Slightly smaller to save space */
     color: var(--text-color);
     opacity: 0.9;
-    margin-bottom: 2rem;
-    line-height: 1.6;
+    margin-bottom: 1rem;
+    /* Tighter margin */
+    line-height: 1.5;
 }
 
 .hero-story {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    /* Slightly smaller to save space */
     color: var(--text-color);
     opacity: 0.8;
-    margin-bottom: 2.5rem;
-    line-height: 1.8;
+    margin-bottom: 2rem;
+    /* Tighter margin */
+    line-height: 1.6;
 }
 
 .cta-button {
     display: inline-block;
     padding: 1rem 2.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: white;
+    font-size: 1.35rem;
+    /* Larger font */
+    font-weight: 800;
+    /* Bolder text for legibility */
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    /* Text shadow for contrast */
     background: linear-gradient(135deg, var(--accent-color), #ec4899);
     border: none;
     border-radius: 30px;
