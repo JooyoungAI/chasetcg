@@ -1,7 +1,7 @@
-const cardImage = "https://images.unsplash.com/photo-1627855938568-7c852445c754?q=80&w=500"; // Pokemon card fallback
-const boxImage = "https://images.unsplash.com/photo-1613589808389-1ea236bf4c66?q=80&w=500"; // Pokemon cards spread
-const toyImage = "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?q=80&w=500"; // Pikachu plush
-const accImage = "https://images.unsplash.com/photo-1610484826967-09c5720778c7?q=80&w=500"; // Pokeballs
+const cardImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"; // Charizard
+const boxImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png"; // Eevee
+const toyImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"; // Pikachu
+const accImage = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"; // Gengar
 
 export const catalogItems = [
     // SEALED
