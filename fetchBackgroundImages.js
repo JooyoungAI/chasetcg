@@ -5,7 +5,8 @@ const popularPokemon = [
     "Kyogre", "Celebi", "Mew", "Ceruledge", "Lugia",
     "Ho-oh", "Mewtwo", "Darkrai", "Arceus", "Umbreon",
     "Espeon", "Eevee", "Sylveon", "Gengar", "Jirachi",
-    "Blastoise", "Venusaur", "Dragonite", "Tyranitar", "Lucario"
+    "Mudkip", "Swampert", "Rayquaza", "Dragonite", "Tyranitar",
+    "Lucario", "Snorlax", "Suicune", "Entei", "Raikou"
 ];
 
 async function fetchBackgroundImages() {
@@ -38,6 +39,9 @@ async function fetchBackgroundImages() {
         // Small delay to prevent rate limiting
         await new Promise(r => setTimeout(r, 200));
     }
+
+    // Shuffle the entire array so cards aren't grouped by Pokemon
+    images = images.sort(() => 0.5 - Math.random());
 
     // Ensure we have exactly 100 (or slice if more)
     images = images.slice(0, 100);
