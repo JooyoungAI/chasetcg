@@ -46,7 +46,7 @@ function CategoryPage({ items, addToCart }) {
 }
 
 function App() {
-  const { products, loading, addProduct, removeProduct } = useProducts()
+  const { products, loading, addProduct, removeProduct, updateProduct } = useProducts()
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
 
@@ -163,7 +163,7 @@ function App() {
           <Route
             path="/admin"
             element={currentUser ? (
-              <Admin products={products} addProduct={addProduct} removeProduct={removeProduct} />
+              <Admin products={products} addProduct={addProduct} removeProduct={removeProduct} updateProduct={updateProduct} />
             ) : (
               <Login setMockAuthUser={setMockAuthUser} />
             )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db, isConfigured } from '../firebase';
 import { catalogItems as mockData } from '../data/mockItems';
 
@@ -65,5 +65,22 @@ export function useProducts() {
         }
     };
 
-    return { products, loading, addProduct, removeProduct };
+    const updateProduct = async (id, updatedData) => {
+        if (isConfigured && db) {
+            try {
+                await updateDoc(doc(db, "products", id.toString()), updatedData);
+                setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedData } : p));
+                return true;
+            } catch (error) {
+                console.error("Error updating product:", error);
+                return false;
+            }
+        } else {
+            // Local fallback
+            setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedData } : p));
+            return true;
+        }
+    };
+
+    return { products, loading, addProduct, removeProduct, updateProduct };
 }
