@@ -1,14 +1,42 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar({ cart, theme, toggleTheme, toggleCart }) {
     const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+    const location = useLocation();
+
+    const categories = [
+        { name: 'All', path: '/' },
+        { name: 'Sealed', path: '/category/sealed' },
+        { name: 'Singles', path: '/category/singles' },
+        { name: 'Graded', path: '/category/graded' },
+        { name: 'Accessories', path: '/category/accessories' }
+    ];
 
     return (
         <nav className="navbar glass-panel">
             <div className="nav-brand">
-                <h1>ChaseTCG</h1>
+                <Link to="/" style={{ textDecoration: 'none' }}>
+                    <h1>ChaseTCG</h1>
+                </Link>
             </div>
+
+            <div className="nav-categories">
+                {categories.map((cat) => (
+                    <Link
+                        key={cat.name}
+                        to={cat.path}
+                        className={`nav-link ${location.pathname === cat.path ? 'active' : ''}`}
+                    >
+                        {cat.name}
+                    </Link>
+                ))}
+            </div>
+
             <div className="nav-actions">
+                <Link to="/admin" className="nav-link admin-link" aria-label="Admin Dashboard">
+                    ⚙️ Admin
+                </Link>
                 <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
                     {theme === 'light' ? '🌙' : '☀️'}
                 </button>

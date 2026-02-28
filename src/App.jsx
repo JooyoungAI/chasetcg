@@ -1,12 +1,45 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Catalog from './components/Catalog'
 import ShoppingCart from './components/ShoppingCart'
+import Admin from './pages/Admin'
 import { catalogItems } from './data/mockItems'
 import './App.css'
 import './components/Navbar.css'
 
+// A wrapper component to filter catalog items based on the URL parameter
+function CategoryPage({ items, addToCart }) {
+  const { categoryId } = useParams()
+
+  // If we are on the home page (no categoryId), show everything.
+  // Otherwise, filter by the categoryId in the URL.
+  const displayedItems = categoryId
+    ? items.filter(item => item.category === categoryId)
+    : items
+
+  const categoryTitle = categoryId
+    ? categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
+    : "All Products"
+
+  return (
+    <>
+      <header className="catalog-header">
+        <h2>{categoryTitle}</h2>
+        <p>Discover premium {categoryId || 'tech and lifestyle'} products crafted for excellence.</p>
+      </header>
+      {displayedItems.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '2rem' }}>No products found in this category.</p>
+      ) : (
+        <Catalog items={displayedItems} addToCart={addToCart} />
+      )}
+    </>
+  )
+}
+
 function App() {
+  // We will lift the products up state so the Admin panel can modify it later
+  const [products, setProducts] = useState(catalogItems)
   const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
 
@@ -71,16 +104,15 @@ function App() {
   }
 
   return (
-    <>
+    <Router>
       <Navbar cart={cart} theme={theme} toggleTheme={toggleTheme} toggleCart={toggleCart} />
 
       <main className="main-content">
-        <header className="catalog-header">
-          <h2>Our Latest Collection</h2>
-          <p>Discover premium tech and lifestyle products crafted for excellence.</p>
-        </header>
-
-        <Catalog items={catalogItems} addToCart={addToCart} />
+        <Routes>
+          <Route path="/" element={<CategoryPage items={products} addToCart={addToCart} />} />
+          <Route path="/category/:categoryId" element={<CategoryPage items={products} addToCart={addToCart} />} />
+          <Route path="/admin" element={<Admin products={products} setProducts={setProducts} />} />
+        </Routes>
       </main>
 
       <ShoppingCart
@@ -90,7 +122,7 @@ function App() {
         updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}
       />
-    </>
+    </Router>
   )
 }
 
