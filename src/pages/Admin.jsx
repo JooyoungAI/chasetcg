@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { runMigration } from '../migrateData';
+import { catalogItems } from '../data/mockItems';
 import './Admin.css';
 
 export default function Admin({ products, addProduct, removeProduct }) {
@@ -48,7 +49,7 @@ export default function Admin({ products, addProduct, removeProduct }) {
     }
 
     const handleMigration = async () => {
-        if (window.confirm('This will upload 7 mock items to Firebase. Are you sure?')) {
+        if (window.confirm(`This will upload ${catalogItems.length} mock items to Firebase. Are you sure?`)) {
             const success = await runMigration();
             if (success) alert('Migration complete! Refresh to see live data.');
         }
