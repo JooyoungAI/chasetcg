@@ -4,12 +4,12 @@ import { backgroundImages } from '../data/backgroundImages';
 import './Home.css';
 
 export default function Home() {
-    // Split 100 images into 5 arrays of 20, then duplicate to create seamless infinite scrolling
-    const row1 = [...backgroundImages.slice(0, 20), ...backgroundImages.slice(0, 20)];
-    const row2 = [...backgroundImages.slice(20, 40), ...backgroundImages.slice(20, 40)];
-    const row3 = [...backgroundImages.slice(40, 60), ...backgroundImages.slice(40, 60)];
-    const row4 = [...backgroundImages.slice(60, 80), ...backgroundImages.slice(60, 80)];
-    const row5 = [...backgroundImages.slice(80, 100), ...backgroundImages.slice(80, 100)];
+    // Split 150 images into 5 arrays of 30, then duplicate to create seamless infinite scrolling
+    const row1 = [...backgroundImages.slice(0, 30), ...backgroundImages.slice(0, 30)];
+    const row2 = [...backgroundImages.slice(30, 60), ...backgroundImages.slice(30, 60)];
+    const row3 = [...backgroundImages.slice(60, 90), ...backgroundImages.slice(60, 90)];
+    const row4 = [...backgroundImages.slice(90, 120), ...backgroundImages.slice(90, 120)];
+    const row5 = [...backgroundImages.slice(120, 150), ...backgroundImages.slice(120, 150)];
 
     // Randomize speeds and starting delays slightly for a more organic feel
     const createRowStyle = () => ({
