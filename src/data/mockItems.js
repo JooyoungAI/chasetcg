@@ -1,7 +1,7 @@
-const cardImage = "https://images.unsplash.com/photo-1615555982855-6b5cf6eecfe5?w=500&q=80"; // standard card image fallback
-const boxImage = "https://images.unsplash.com/photo-1615555983050-da043f114674?w=500&q=80"; // box image fallback
-const toyImage = "https://images.unsplash.com/photo-1620336655174-32f4bc92d0cc?w=500&q=80"; // toy/card image fallback
-const accImage = "https://images.unsplash.com/photo-1618331835717-814ed9bc1135?w=500&q=80";
+const cardImage = "https://images.unsplash.com/photo-1627855938568-7c852445c754?q=80&w=500"; // Pokemon card fallback
+const boxImage = "https://images.unsplash.com/photo-1613589808389-1ea236bf4c66?q=80&w=500"; // Pokemon cards spread
+const toyImage = "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?q=80&w=500"; // Pikachu plush
+const accImage = "https://images.unsplash.com/photo-1610484826967-09c5720778c7?q=80&w=500"; // Pokeballs
 
 export const catalogItems = [
     // SEALED
