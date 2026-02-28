@@ -246,21 +246,23 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                         </td>
                                         <td className="font-bold text-accent">${product.price.toFixed(2)}</td>
                                         <td>
-                                            <button
-                                                className="edit-btn"
-                                                onClick={() => handleEdit(product)}
-                                                style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', marginRight: '0.5rem', fontSize: '0.8rem' }}
-                                                aria-label="Edit product"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="delete-btn"
-                                                onClick={() => handleDelete(product.id)}
-                                                aria-label="Delete product"
-                                            >
-                                                Delete
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => handleEdit(product)}
+                                                    style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                    aria-label="Edit product"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={() => handleDelete(product.id)}
+                                                    aria-label="Delete product"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
