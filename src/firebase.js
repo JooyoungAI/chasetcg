@@ -13,8 +13,8 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase only if config exists
-const isConfigured = !!firebaseConfig.apiKey;
+// Initialize Firebase only if config exists and isn't empty
+const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5 && firebaseConfig.apiKey !== "your-api-key-here");
 
 let app;
 let auth;
