@@ -6,11 +6,12 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
     const location = useLocation();
 
     const categories = [
-        { name: 'All', path: '/' },
-        { name: 'Sealed', path: '/category/sealed' },
-        { name: 'Singles', path: '/category/singles' },
-        { name: 'Graded', path: '/category/graded' },
-        { name: 'Accessories', path: '/category/accessories' }
+        { name: 'Home', path: '/' },
+        { name: 'All Products', path: '/shop' },
+        { name: 'Sealed', path: '/shop/sealed' },
+        { name: 'Singles', path: '/shop/singles' },
+        { name: 'Graded', path: '/shop/graded' },
+        { name: 'Accessories', path: '/shop/accessories' }
     ];
 
     return (
@@ -26,7 +27,10 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
                     <Link
                         key={cat.name}
                         to={cat.path}
-                        className={`nav-link ${location.pathname === cat.path ? 'active' : ''}`}
+                        className={`nav-link ${location.pathname === cat.path ||
+                                (cat.path !== '/' && location.pathname.startsWith(cat.path))
+                                ? 'active' : ''
+                            }`}
                     >
                         {cat.name}
                     </Link>

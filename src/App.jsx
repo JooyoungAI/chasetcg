@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-
 import Navbar from './components/Navbar'
 import Catalog from './components/Catalog'
 import ShoppingCart from './components/ShoppingCart'
+import Home from './pages/Home'
 import Admin from './pages/Admin'
 import Login from './pages/Login'
 import { catalogItems } from './data/mockItems'
@@ -158,8 +159,9 @@ function App() {
 
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<CategoryPage items={products} addToCart={addToCart} />} />
-          <Route path="/category/:categoryId" element={<CategoryPage items={products} addToCart={addToCart} />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<CategoryPage items={products} addToCart={addToCart} />} />
+          <Route path="/shop/:categoryId" element={<CategoryPage items={products} addToCart={addToCart} />} />
           <Route
             path="/admin"
             element={currentUser ? (
