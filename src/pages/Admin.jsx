@@ -30,6 +30,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [tcgdexSets, setTcgdexSets] = useState([]);
+    const [selectedCard, setSelectedCard] = useState(null);
 
     // Custom Autocomplete State for Set Name
     const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -214,6 +215,35 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
         setSearchResults(resorted);
     }, [searchSort]);
+
+    const handleCardClick = (card) => {
+        setSelectedCard(card);
+    };
+
+    const confirmAddCard = async (priceStr) => {
+        if (!selectedCard) return;
+
+        const price = parseFloat(priceStr);
+        if (isNaN(price) || price < 0) {
+            alert("Please enter a valid positive price.");
+            return;
+        }
+
+        const addResult = await addProduct({
+            name: selectedCard.name,
+            price: price,
+            category: 'singles',
+            description: `A single card from TCGdex. Set ID: ${selectedCard.id.split('-')[0]}`,
+            image: `${selectedCard.image}/high.webp` // fetch high-res for store
+        });
+
+        if (addResult.success) {
+            alert(`Added ${selectedCard.name} to store inventory for $${price.toFixed(2)}`);
+            setSelectedCard(null); // close modal
+        } else {
+            alert("Failed to add product: " + addResult.error);
+        }
+    };
 
     const handleAddFromSearch = async (card) => {
         // Ask for price
@@ -496,10 +526,9 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                 )}
                                             </div>
                                         </div>
-                                        {/* Move search button natively below the input fields so it's not obscured by autocomplete */}
                                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
-                                            <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '300px', padding: '0.75rem 1.5rem', margin: 0 }}>
-                                                {isSearching ? '...' : 'Search TCGdex'}
+                                            <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.75rem 2rem', margin: 0 }}>
+                                                {isSearching ? '...' : 'Search'}
                                             </button>
                                         </div>
                                     </div>
@@ -525,7 +554,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
-                                            onClick={() => handleAddFromSearch(card)}
+                                            onClick={() => handleCardClick(card)}
                                             style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s' }}
                                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -737,6 +766,57 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     </div>
                 )}
             </div>
+
+            {/* Card Detail Modal */}
+            {selectedCard && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 9999, padding: '2rem'
+                }}>
+                    <div className="glass-panel" style={{
+                        maxWidth: '500px', width: '100%', padding: '2rem', display: 'flex',
+                        flexDirection: 'column', alignItems: 'center', gap: '1.5rem', position: 'relative'
+                    }}>
+                        <button
+                            onClick={() => setSelectedCard(null)}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                        >&times;</button>
+
+                        <h2 style={{ margin: 0, textAlign: 'center' }}>{selectedCard.name}</h2>
+
+                        <img
+                            src={`${selectedCard.image}/high.webp`}
+                            alt={selectedCard.name}
+                            style={{ width: '100%', maxWidth: '350px', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}
+                        />
+
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
+                            View details for {selectedCard.name}. Set your selling price below to add it to your store.
+                        </p>
+
+                        <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+                            <button
+                                onClick={() => {
+                                    const price = window.prompt(`Set selling price for ${selectedCard.name} (e.g. 5.99):`);
+                                    if (price) confirmAddCard(price);
+                                }}
+                                className="admin-submit-btn"
+                                style={{ flex: 1, margin: 0 }}
+                            >
+                                Add to Store
+                            </button>
+                            <button
+                                onClick={() => setSelectedCard(null)}
+                                style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
