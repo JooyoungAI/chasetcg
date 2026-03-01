@@ -13,7 +13,10 @@ export default function Catalog({ items, addToCart, categoryId }) {
         if (item.rarity) return item.rarity;
         if (item.description) {
             const match = item.description.match(/A beautiful (.+?) card/);
-            if (match) return match[1];
+            if (match) {
+                // Force Title Case (e.g., "Special illustration rare" -> "Special Illustration Rare")
+                return match[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            }
         }
         return null;
     };
@@ -61,10 +64,11 @@ export default function Catalog({ items, addToCart, categoryId }) {
     const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
     const paginatedItems = sortedItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Reset to page 1 if criteria changes
+    // Reset to page 1 and clear filters if category or items change
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [items, sortOption, searchQuery, rarityFilter]);
+        setRarityFilter('All');
+    }, [items, sortOption, searchQuery, categoryId]);
 
     return (
         <div>

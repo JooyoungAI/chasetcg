@@ -292,8 +292,8 @@ function App() {
   // One-time client-side sweep to purge TCG Pocket entries natively leveraging the Admin session
   useEffect(() => {
     const sweepPocket = async () => {
-      if (localStorage.getItem('sweep_pocket_v1') === 'true' || !authUser) return;
-      console.log('Sweeping database for Pokemon TCG Pocket cards...');
+      if (localStorage.getItem('sweep_pocket_v3') === 'true' || !authUser) return;
+      console.log('Sweeping database for Pokemon TCG Pocket cards (v3 Deep Clean)...');
       try {
         const snapshot = await getDocs(collection(db, 'products'));
         let deleteBatch = writeBatch(db);
@@ -303,12 +303,15 @@ function App() {
           const data = docSnap.data();
           const isPocket =
             (data.image && data.image.includes('/pocket/')) ||
+            (data.id && (data.id.includes('pocket') || data.id.toLowerCase().startsWith('a1') || data.id.toLowerCase().startsWith('a2') || data.id.toLowerCase().startsWith('pr-a'))) ||
             (data.name && data.name.includes('Genetic Apex')) ||
             (data.name && data.name.includes('Mythical Island')) ||
             (data.name && data.name.includes('Promo-A')) ||
+            (data.name && data.name.toLowerCase().includes('pocket')) ||
             (data.description && data.description.includes('Genetic Apex')) ||
             (data.description && data.description.includes('Mythical Island')) ||
-            (data.description && data.description.includes('Promo-A'));
+            (data.description && data.description.includes('Promo-A')) ||
+            (data.description && data.description.toLowerCase().includes('pocket'));
 
           if (isPocket) {
             console.log('Queuing pocket card for deletion:', data.name);
@@ -321,9 +324,9 @@ function App() {
           await deleteBatch.commit();
           console.log(`Successfully purged ${count} Pocket cards from Firestore!`);
         } else {
-          console.log('No Pocket cards found during sweep.');
+          console.log('No Pocket cards found during deep sweep.');
         }
-        localStorage.setItem('sweep_pocket_v1', 'true');
+        localStorage.setItem('sweep_pocket_v3', 'true');
       } catch (err) {
         console.error('Failed to sweep pocket cards:', err);
       }
