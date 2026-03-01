@@ -35,6 +35,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
     // Custom Autocomplete State for Set Name
     const [showAutocomplete, setShowAutocomplete] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const autocompleteRef = React.useRef(null);
     const filteredSets = tcgdexSets.filter(set => set.name.toLowerCase().includes(searchSetName.toLowerCase()));
 
     // Fetch TCGdex Sets on mount for chronological sorting and Set Name fuzzy searching
@@ -223,7 +225,16 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         try {
             const res = await fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`);
             const fullDetails = await res.json();
-            setSelectedCard(fullDetails);
+
+            // Also fetch the specific set to get its original Release Date since the cards endpoint lacks it
+            let releaseDate = null;
+            if (fullDetails.set?.id) {
+                const setRes = await fetch(`https://api.tcgdex.net/v2/en/sets/${fullDetails.set.id}`);
+                const setData = await setRes.json();
+                releaseDate = setData.releaseDate;
+            }
+
+            setSelectedCard({ ...fullDetails, setReleaseDate: releaseDate });
         } catch (error) {
             console.error("Failed to load full card details", error);
         } finally {
@@ -506,7 +517,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                 onChange={(e) => setSearchCardName(e.target.value)}
                                                 style={{ flexGrow: 1 }}
                                             />
-                                            <div style={{ position: 'relative', flexGrow: 1 }}>
+                                            <div style={{ position: 'relative', flexGrow: 1 }} ref={autocompleteRef}>
                                                 <input
                                                     type="text"
                                                     placeholder="Set Name (e.g. Ascended Heroes)"
@@ -514,9 +525,29 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                     onChange={(e) => {
                                                         setSearchSetName(e.target.value);
                                                         setShowAutocomplete(true);
+                                                        setHighlightedIndex(-1); // Reset highlight when typing
                                                     }}
-                                                    onFocus={() => setShowAutocomplete(true)}
-                                                    onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)} // delay to allow click
+                                                    onFocus={() => {
+                                                        setShowAutocomplete(true);
+                                                        setHighlightedIndex(-1);
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (!showAutocomplete || filteredSets.length === 0) return;
+
+                                                        if (e.key === 'ArrowDown') {
+                                                            e.preventDefault();
+                                                            setHighlightedIndex(prev => (prev < filteredSets.length - 1 ? prev + 1 : prev));
+                                                        } else if (e.key === 'ArrowUp') {
+                                                            e.preventDefault();
+                                                            setHighlightedIndex(prev => (prev > 0 ? prev - 1 : prev));
+                                                        } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+                                                            e.preventDefault();
+                                                            setSearchSetName(filteredSets[highlightedIndex].name);
+                                                            setShowAutocomplete(false);
+                                                        } else if (e.key === 'Escape') {
+                                                            setShowAutocomplete(false);
+                                                        }
+                                                    }}
                                                     style={{ width: '100%' }}
                                                     autoComplete="off"
                                                 />
@@ -527,7 +558,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                         borderRadius: '4px', maxHeight: '200px', overflowY: 'auto',
                                                         listStyle: 'none', padding: 0, margin: '0.25rem 0 0 0', zIndex: 10
                                                     }}>
-                                                        {filteredSets.map(set => (
+                                                        {filteredSets.map((set, idx) => (
                                                             <li
                                                                 key={set.id}
                                                                 onClick={() => {
@@ -536,10 +567,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                                 }}
                                                                 style={{
                                                                     padding: '0.5rem', cursor: 'pointer',
-                                                                    borderBottom: '1px solid rgba(150,150,150,0.1)'
+                                                                    borderBottom: '1px solid rgba(150,150,150,0.1)',
+                                                                    background: highlightedIndex === idx ? 'var(--panel-border)' : 'transparent'
                                                                 }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-border)'}
-                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                                onMouseEnter={() => setHighlightedIndex(idx)}
                                                             >
                                                                 {set.name}
                                                             </li>
@@ -877,10 +908,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                     <span>{selectedCard.illustrator}</span>
                                                 </>
                                             )}
-                                            {selectedCard.updated && (
+                                            {selectedCard.setReleaseDate && (
                                                 <>
-                                                    <strong style={{ color: 'var(--text-secondary)' }}>Database Updated:</strong>
-                                                    <span>{new Date(selectedCard.updated).toLocaleDateString()}</span>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Release Date:</strong>
+                                                    <span>{new Date(selectedCard.setReleaseDate).toLocaleDateString()}</span>
                                                 </>
                                             )}
                                         </div>
