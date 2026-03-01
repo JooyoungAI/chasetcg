@@ -562,7 +562,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '2rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '2rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '1.5rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
@@ -572,8 +572,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                             title={`Click to add ${card.name}`}
                                         >
-                                            <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.25rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                                            <span style={{ fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 'bold' }}>{card.name}</span>
+                                            <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 4px 8px rgba(0,0,0,0.15)' }} />
+                                            <span style={{ fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold' }}>{card.name}</span>
                                         </div>
                                     ))}
                                 </div>
