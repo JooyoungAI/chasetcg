@@ -86,16 +86,13 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    padding: 2rem 2.5rem;
-    /* Reduced padding from 3rem */
+    padding: 1.5rem 2rem;
     border-radius: 20px;
     background: var(--glass-bg);
     backdrop-filter: blur(8px);
-    /* Mosaic glass blur */
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--glass-border);
     background-color: rgba(255, 255, 255, 0.25);
-    /* Transparent light mode */
     box-shadow: 0 8px 32px var(--shadow-color);
     max-width: 800px;
     width: 90%;
@@ -103,15 +100,12 @@
 
 [data-theme='dark'] .hero-content {
     background-color: rgba(15, 23, 42, 0.45);
-    /* Transparent dark mode */
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    /* Slightly smaller to save space */
+    font-size: 3rem;
     font-weight: 800;
-    margin-bottom: 0.5rem;
-    /* Tighter margin */
+    margin-bottom: 0.25rem;
     background: linear-gradient(135deg, var(--text-color), var(--accent-color));
     background-clip: text;
     -webkit-background-clip: text;
@@ -119,23 +113,19 @@
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
-    /* Slightly smaller to save space */
+    font-size: 1.15rem;
     color: var(--text-color);
     opacity: 0.9;
-    margin-bottom: 1rem;
-    /* Tighter margin */
-    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
 }
 
 .hero-story {
-    font-size: 1.05rem;
-    /* Slightly smaller to save space */
+    font-size: 1rem;
     color: var(--text-color);
     opacity: 0.8;
-    margin-bottom: 2rem;
-    /* Tighter margin */
-    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
 }
 
 .cta-button {
@@ -160,4 +150,33 @@
 .cta-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+}
+
+/* --- Mobile Hero Adjustments to Reveal Background Cards --- */
+@media (max-width: 640px) {
+    .hero-content {
+        padding: 1rem 1.25rem;
+        width: 95%;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-story {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+
+    .cta-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
 }
