@@ -124,7 +124,6 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
         try {
             let fetchUrl = '';
-            let isSetFilteredLocal = false;
             let targetSetId = null;
 
             // If a set name is provided, find its ID from our prefetched list
@@ -142,9 +141,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
             // Determine fetch strategy
             if (searchCardName.trim() && targetSetId) {
-                // If BOTH are provided, fetch by card name, then filter by set locally
-                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchCardName)}`;
-                isSetFilteredLocal = true;
+                // If BOTH are provided, pass both directly to the TCGdex backend to massively reduce payload lag!
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchCardName)}&set.id=${targetSetId}`;
             } else if (searchCardName.trim()) {
                 fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchCardName)}`;
             } else if (targetSetId) {
@@ -186,13 +184,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 return !isPocket;
             });
 
-            // Fetch extra details for each to get the actual Set Name if we need to filter by it locally
-            // Warning: The basic /cards search endpoint doesn't return `set.name`.
-            // But if we did a combined search, we must filter. In a real world app this might be N+1 fetch heavy, 
-            // but we'll approximate it by checking if the id starts with the targetSetId
-            if (isSetFilteredLocal && targetSetId) {
-                validCards = validCards.filter(c => c.id.startsWith(targetSetId));
-            }
+
 
             // Sort by Card Number (localId) or Chronologically (Set Index)
             validCards.sort((a, b) => {
@@ -669,7 +661,16 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                             title={`Click to add ${card.name}`}
                                         >
-                                            <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 4px 8px rgba(0,0,0,0.15)' }} />
+                                            <img
+                                                src={`${card.image}/low.webp`}
+                                                alt={card.name}
+                                                style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 4px 8px rgba(0,0,0,0.15)' }}
+                                                onError={(e) => {
+                                                    if (e.target.src.endsWith('/low.webp')) {
+                                                        e.target.src = `${card.image}/low.png`;
+                                                    }
+                                                }}
+                                            />
                                             <span style={{ fontSize: '0.9rem', marginTop: '0.5rem', fontWeight: 'bold' }}>{card.name}</span>
                                         </div>
                                     ))}
@@ -910,6 +911,16 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                     src={selectedCard.image ? `${selectedCard.image}/high.webp` : ''}
                                     alt={selectedCard.name}
                                     style={{ width: '100%', maxWidth: '350px', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}
+                                    onError={(e) => {
+                                        // Some cards lack the specific /high.webp extension format, so we gracefully cascade downwards
+                                        if (e.target.src.endsWith('/high.webp')) {
+                                            e.target.src = `${selectedCard.image}/low.webp`;
+                                        } else if (e.target.src.endsWith('/low.webp')) {
+                                            e.target.src = `${selectedCard.image}/high.png`;
+                                        } else if (e.target.src.endsWith('/high.png')) {
+                                            e.target.src = `${selectedCard.image}/low.png`;
+                                        }
+                                    }}
                                 />
                             </div>
 
