@@ -69,10 +69,10 @@ export default function Catalog({ items, addToCart, categoryId }) {
     return (
         <div>
             {/* Sorting Controls */}
-            <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', padding: '0 1rem', gap: '1rem', position: 'relative' }}>
 
                 {/* Search Input */}
-                <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', position: 'relative', marginTop: '0.2rem' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '0.75rem' }}>
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -86,28 +86,15 @@ export default function Catalog({ items, addToCart, categoryId }) {
                     />
                 </div>
 
-                <div style={{ flex: '1 1 auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {/* Product Counter Centered */}
+                <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <strong style={{ color: 'black', fontSize: '1.1rem' }}>{sortedItems.length} Products</strong>
                 </div>
 
-                <div style={{ flex: '1 1 500px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                    {categoryId === 'singles' && uniqueRarities.length > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <label htmlFor="rarity-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Rarity:</label>
-                            <select
-                                id="rarity-dropdown"
-                                value={rarityFilter}
-                                onChange={(e) => setRarityFilter(e.target.value)}
-                                style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}
-                            >
-                                <option value="All">All Rarities</option>
-                                {uniqueRarities.map(rarity => (
-                                    <option key={rarity} value={rarity}>{rarity}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
+                {/* Filters right-aligned and stacked vertically */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
 
+                    {/* Sort By Dropdown */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Sort By:</label>
                         <select
@@ -124,6 +111,24 @@ export default function Catalog({ items, addToCart, categoryId }) {
                             <option value="alpha-za">Alphabetical: Z-A</option>
                         </select>
                     </div>
+
+                    {/* Rarity Dropdown (Stacked Below) */}
+                    {categoryId === 'singles' && uniqueRarities.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <label htmlFor="rarity-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Rarity:</label>
+                            <select
+                                id="rarity-dropdown"
+                                value={rarityFilter}
+                                onChange={(e) => setRarityFilter(e.target.value)}
+                                style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}
+                            >
+                                <option value="All">All Rarities</option>
+                                {uniqueRarities.map(rarity => (
+                                    <option key={rarity} value={rarity}>{rarity}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -289,6 +289,51 @@ function App() {
     }
   }, [authUser]);
 
+  // One-time client-side sweep to purge TCG Pocket entries natively leveraging the Admin session
+  useEffect(() => {
+    const sweepPocket = async () => {
+      if (localStorage.getItem('sweep_pocket_v1') === 'true' || !authUser) return;
+      console.log('Sweeping database for Pokemon TCG Pocket cards...');
+      try {
+        const snapshot = await getDocs(collection(db, 'products'));
+        let deleteBatch = writeBatch(db);
+        let count = 0;
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const isPocket =
+            (data.image && data.image.includes('/pocket/')) ||
+            (data.name && data.name.includes('Genetic Apex')) ||
+            (data.name && data.name.includes('Mythical Island')) ||
+            (data.name && data.name.includes('Promo-A')) ||
+            (data.description && data.description.includes('Genetic Apex')) ||
+            (data.description && data.description.includes('Mythical Island')) ||
+            (data.description && data.description.includes('Promo-A'));
+
+          if (isPocket) {
+            console.log('Queuing pocket card for deletion:', data.name);
+            deleteBatch.delete(doc(db, 'products', docSnap.id));
+            count++;
+          }
+        });
+
+        if (count > 0) {
+          await deleteBatch.commit();
+          console.log(`Successfully purged ${count} Pocket cards from Firestore!`);
+        } else {
+          console.log('No Pocket cards found during sweep.');
+        }
+        localStorage.setItem('sweep_pocket_v1', 'true');
+      } catch (err) {
+        console.error('Failed to sweep pocket cards:', err);
+      }
+    };
+
+    if (authUser) {
+      setTimeout(() => sweepPocket(), 5000);
+    }
+  }, [authUser]);
+
   return (
     <Router>
       <Navbar
