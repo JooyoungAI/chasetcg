@@ -121,9 +121,9 @@
 }
 
 .admin-table-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
+    width: 80px;
+    height: 110px;
+    object-fit: contain;
     border-radius: 0.5rem;
 }
 

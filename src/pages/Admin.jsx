@@ -31,6 +31,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [isSearching, setIsSearching] = useState(false);
     const [tcgdexSets, setTcgdexSets] = useState([]);
 
+    // Custom Autocomplete State for Set Name
+    const [showAutocomplete, setShowAutocomplete] = useState(false);
+    const filteredSets = tcgdexSets.filter(set => set.name.toLowerCase().includes(searchSetName.toLowerCase()));
+
     // Fetch TCGdex Sets on mount for chronological sorting and Set Name fuzzy searching
     React.useEffect(() => {
         const fetchSets = async () => {
@@ -125,10 +129,13 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
             const data = await response.json();
 
             // TCGdex returns an array of objects: { id, localId, name, image }
-            // Filter out items without an image, and exclude Pokemon TCG Pocket cards
+            // Filter out items without an image, and rigorously exclude Pokemon TCG Pocket sets
             let validCards = (data || []).filter(c =>
                 c.image &&
-                (!c.id.includes('A1') && !c.id.includes('pocket')) // Very basic Pocket exclusion based on typical IDs
+                !c.id.includes('pocket') &&
+                !c.id.includes('A1') &&
+                !c.id.includes('G1') &&
+                !c.id.includes('PROMOP')
             );
 
             // Fetch extra details for each to get the actual Set Name if we need to filter by it locally
@@ -409,19 +416,47 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             onChange={(e) => setSearchCardName(e.target.value)}
                                             style={{ flexGrow: 1 }}
                                         />
-                                        <input
-                                            type="text"
-                                            placeholder="Set Name (e.g. Ascended Heroes)"
-                                            value={searchSetName}
-                                            onChange={(e) => setSearchSetName(e.target.value)}
-                                            list="set-options"
-                                            style={{ flexGrow: 1 }}
-                                        />
-                                        <datalist id="set-options">
-                                            {tcgdexSets.map(set => (
-                                                <option key={set.id} value={set.name} />
-                                            ))}
-                                        </datalist>
+                                        <div style={{ position: 'relative', flexGrow: 1 }}>
+                                            <input
+                                                type="text"
+                                                placeholder="Set Name (e.g. Ascended Heroes)"
+                                                value={searchSetName}
+                                                onChange={(e) => {
+                                                    setSearchSetName(e.target.value);
+                                                    setShowAutocomplete(true);
+                                                }}
+                                                onFocus={() => setShowAutocomplete(true)}
+                                                onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)} // delay to allow click
+                                                style={{ width: '100%' }}
+                                                autoComplete="off"
+                                            />
+                                            {showAutocomplete && searchSetName && filteredSets.length > 0 && (
+                                                <ul style={{
+                                                    position: 'absolute', top: '100%', left: 0, right: 0,
+                                                    background: 'var(--panel-bg)', border: '1px solid var(--panel-border)',
+                                                    borderRadius: '4px', maxHeight: '200px', overflowY: 'auto',
+                                                    listStyle: 'none', padding: 0, margin: '0.25rem 0 0 0', zIndex: 10
+                                                }}>
+                                                    {filteredSets.map(set => (
+                                                        <li
+                                                            key={set.id}
+                                                            onClick={() => {
+                                                                setSearchSetName(set.name);
+                                                                setShowAutocomplete(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '0.5rem', cursor: 'pointer',
+                                                                borderBottom: '1px solid rgba(150,150,150,0.1)'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-border)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                        >
+                                                            {set.name}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center' }}>
                                         <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.5rem 1.5rem', margin: 0 }}>
@@ -446,7 +481,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '1rem', maxHeight: '600px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '1rem', maxHeight: '600px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
@@ -472,7 +507,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 {activeTab === 'inventory' && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 2fr', gap: '2rem' }}>
                         {/* Manual Add/Edit Product Form */}
-                        <section className="admin-section form-section glass-panel">
+                        <section className="admin-section form-section glass-panel" style={{ alignSelf: 'start' }}>
                             <h3 style={{ borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
                                 {editingProductId ? 'Edit Specific Product' : 'Add Custom Product'}
                             </h3>
