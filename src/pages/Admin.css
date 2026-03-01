@@ -7,13 +7,10 @@
 .admin-section.search-active {
     width: 98vw;
     max-width: 1800px;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -49vw;
-    margin-right: -49vw;
+    margin-left: calc(-49vw + 50%);
+    margin-right: calc(-49vw + 50%);
     box-sizing: border-box;
-    /* robust full-bleed out of centered container */
+    /* pure calculated viewport expand without absolute left positioning that breaks layout */
 }
 
 .admin-header {
