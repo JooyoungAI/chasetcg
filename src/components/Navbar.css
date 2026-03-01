@@ -225,3 +225,76 @@
         gap: 1.5rem;
     }
 }
+
+/* Admin Dropdown Styles (Desktop First) */
+.admin-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.admin-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 150px;
+    background: var(--bg-color);
+    border: 1px solid var(--panel-border);
+    border-radius: 0.5rem;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.admin-dropdown-container:hover .admin-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.admin-dropdown-item {
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    text-align: left;
+    background: transparent;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-dropdown-item:hover {
+    background: rgba(150, 150, 150, 0.1);
+    color: var(--accent);
+}
+
+/* Mobile Overrides for Dropdown */
+@media (max-width: 820px) {
+    .admin-dropdown-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+        margin-top: 0;
+        padding-left: 1rem;
+    }
+
+    .admin-dropdown-container {
+        width: 100%;
+    }
+}

@@ -15,7 +15,9 @@ export default function Catalog({ items, addToCart }) {
         // Filter by search query first
         if (searchQuery.trim()) {
             const lowerQuery = searchQuery.toLowerCase();
-            itemsCopy = itemsCopy.filter(item => item.name.toLowerCase().includes(lowerQuery));
+            itemsCopy = itemsCopy.filter(item =>
+                (item.name || '').toLowerCase().includes(lowerQuery)
+            );
         }
 
         switch (sortOption) {
