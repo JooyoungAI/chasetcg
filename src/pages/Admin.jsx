@@ -169,7 +169,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 }
             });
 
-            setSearchResults(validCards);
+            setSearchResults([...validCards]); // clone to force React re-render
         } catch (error) {
             console.error("Error fetching from TCGdex:", error);
             alert("Failed to search TCGdex. Try again.");
@@ -177,6 +177,33 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
             setIsSearching(false);
         }
     };
+
+    // Auto-resort current results when searchSort changes to save API calls
+    React.useEffect(() => {
+        if (searchResults.length === 0) return;
+
+        const resorted = [...searchResults].sort((a, b) => {
+            const setA = a.id.split('-')[0];
+            const setB = b.id.split('-')[0];
+            const indexA = tcgdexSets.findIndex(s => s.id === setA);
+            const indexB = tcgdexSets.findIndex(s => s.id === setB);
+
+            if (searchSort === 'newest' || searchSort === 'oldest') {
+                if (indexA === indexB) {
+                    const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
+                    const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
+                    return searchSort === 'newest' ? localB - localA : localA - localB;
+                }
+                return searchSort === 'newest' ? indexB - indexA : indexA - indexB;
+            } else {
+                const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
+                const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
+                return searchSort === 'cardno-asc' ? localA - localB : localB - localA;
+            }
+        });
+
+        setSearchResults(resorted);
+    }, [searchSort]);
 
     const handleAddFromSearch = async (card) => {
         // Ask for price
@@ -326,7 +353,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const paginatedProducts = processedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
-        <div className="admin-dashboard">
+        <div className={`admin-dashboard ${activeTab === 'search' ? 'search-active' : ''}`}>
             <header className="admin-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -458,9 +485,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             )}
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center' }}>
-                                        <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.5rem 1.5rem', margin: 0 }}>
-                                            {isSearching ? '...' : 'Search'}
+                                    {/* Move search button natively below the input fields so it's not obscured by autocomplete */}
+                                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.5rem' }}>
+                                        <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '200px', padding: '0.75rem 1.5rem', margin: 0 }}>
+                                            {isSearching ? '...' : 'Search TCGdex'}
                                         </button>
                                     </div>
                                 </div>
@@ -481,7 +509,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '1rem', maxHeight: '600px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '1rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
