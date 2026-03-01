@@ -49,21 +49,23 @@ export default function Home() {
             </div>
 
             {/* Hero Content Overlay */}
-            <div className="hero-content glass-panel">
+            <div className="hero-wrapper">
                 <h1 className="hero-title">Welcome to Chase TCG</h1>
-                <h2 className="hero-subtitle">The ultimate destination for premium Pokemon collectibles.</h2>
+                <div className="hero-content glass-panel">
+                    <h2 className="hero-subtitle">The ultimate destination for premium Pokemon collectibles.</h2>
 
-                <p className="hero-story">
-                    Born from a passion for the thrill of the pull, Chase TCG was founded on a simple premise:
-                    Provide collectors with the absolute pinnacle of genuine Pokemon Trading Card Game products.
-                    From flawless graded vintage holos to factory-fresh modern booster boxes, we source only
-                    the highest quality inventory. Whether you're hunting for Moonbreon, chasing that elusive Base
-                    Set Charizard, or just looking to crack some packs with friends—your chase starts here.
-                </p>
+                    <p className="hero-story">
+                        Born from a passion for the thrill of the pull, Chase TCG was founded on a simple premise:
+                        Provide collectors with the absolute pinnacle of genuine Pokemon Trading Card Game products.
+                        From flawless graded vintage holos to factory-fresh modern booster boxes, we source only
+                        the highest quality inventory. Whether you're hunting for Moonbreon, chasing that elusive Base
+                        Set Charizard, or just looking to crack some packs with friends—your chase starts here.
+                    </p>
 
-                <Link to="/shop" className="cta-button">
-                    Enter the Store
-                </Link>
+                    <Link to="/shop" className="cta-button">
+                        Enter the Store
+                    </Link>
+                </div>
             </div>
         </div>
     );
