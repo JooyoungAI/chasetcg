@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { runMigration } from '../migrateData';
 import { catalogItems } from '../data/mockItems';
+import { db } from '../firebase';
+import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
 import './Admin.css';
 
 export default function Admin({ products, addProduct, removeProduct, updateProduct }) {
@@ -63,10 +64,48 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         }
     }
 
-    const handleMigration = async () => {
-        if (window.confirm(`This will upload ${catalogItems.length} mock items to Firebase. Are you sure?`)) {
-            const success = await runMigration();
-            if (success) alert('Migration complete! Refresh to see live data.');
+    const handleForcedSync = async () => {
+        if (!window.confirm(`This will completely wipe current items and re-upload all ${catalogItems.length} mock items with the updated Set Names. Continue?`)) return;
+
+        try {
+            alert('Starting forced database sync... this may take 10 seconds. Check console for logs.');
+
+            console.log("Starting Web Client Firestore cleanup and migration...");
+            const productsCol = collection(db, 'products');
+
+            console.log("1. Deleting all existing products in Firestore...");
+            const existingDocs = await getDocs(productsCol);
+            let deleteBatch = writeBatch(db);
+            existingDocs.forEach((document) => {
+                deleteBatch.delete(doc(db, 'products', document.id));
+            });
+
+            await deleteBatch.commit();
+            console.log("Finished deleting old mock data.");
+
+            console.log("2. Uploading enriched catalogItems to Firestore...");
+            let insertBatch = writeBatch(db);
+
+            for (const item of catalogItems) {
+                const newDocRef = doc(productsCol);
+                insertBatch.set(newDocRef, {
+                    name: item.name,
+                    price: item.price,
+                    category: item.category,
+                    description: item.description,
+                    image: item.image,
+                    createdAt: new Date()
+                });
+            }
+
+            await insertBatch.commit();
+            console.log("Successfully uploaded new mock data.");
+            alert('Migration complete! Refresh the page to see live data.');
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Migration failed:", error);
+            alert('Migration failed! ' + error.message);
         }
     }
 
@@ -113,11 +152,11 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 <p>Manage your inventory, prices, and categories from this dashboard.</p>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                     <button
-                        onClick={handleMigration}
+                        onClick={handleForcedSync}
                         style={{ background: '#ec4899', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
                         title="Setup button to instantly migrate initial mock data to your new database."
                     >
-                        Run Firebase Initial Data Upload
+                        Force DB Sync (Update Set Names)
                     </button>
                     <button
                         onClick={handleDeleteAll}
