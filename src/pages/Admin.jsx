@@ -16,13 +16,32 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [newProduct, setNewProduct] = useState(defaultProductState);
     const [editingProductId, setEditingProductId] = useState(null);
     const [filterCategory, setFilterCategory] = useState('All');
+    const [inventorySort, setInventorySort] = useState('date-new'); // Default newest first
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 25;
 
     // Search TCGdex States
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchType, setSearchType] = useState('card'); // 'card' or 'set'
+    const [searchSort, setSearchSort] = useState('newest'); // 'newest' or 'oldest'
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [tcgdexSets, setTcgdexSets] = useState([]);
+
+    // Fetch TCGdex Sets on mount for chronological sorting and Set Name fuzzy searching
+    React.useEffect(() => {
+        const fetchSets = async () => {
+            try {
+                const res = await fetch('https://api.tcgdex.net/v2/en/sets');
+                const data = await res.json();
+                // data is chronologically ordered oldest -> newest by default in TCGdex
+                setTcgdexSets(data || []);
+            } catch (error) {
+                console.error("Failed to fetch TCGdex sets:", error);
+            }
+        };
+        fetchSets();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -71,12 +90,48 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         setSearchResults([]);
 
         try {
-            const response = await fetch(`https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchQuery)}`);
+            let fetchUrl = '';
+
+            if (searchType === 'card') {
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchQuery)}`;
+            } else if (searchType === 'set') {
+                // Find Set ID by fuzzy matching the query against pre-fetched sets
+                const lowerQuery = searchQuery.toLowerCase();
+                const matchedSet = tcgdexSets.find(s => s.name.toLowerCase().includes(lowerQuery));
+
+                if (!matchedSet) {
+                    alert(`Could not find a Set matching "${searchQuery}".`);
+                    setIsSearching(false);
+                    return;
+                }
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?set=${matchedSet.id}`;
+            }
+
+            const response = await fetch(fetchUrl);
             const data = await response.json();
 
             // TCGdex returns an array of objects: { id, localId, name, image }
             // Filter out items without an image to avoid broken UI
-            const validCards = (data || []).filter(c => c.image);
+            let validCards = (data || []).filter(c => c.image);
+
+            // Sort Chronologically utilizing the indexOf the card's Set in our pre-fetched sets array
+            // Card IDs are typically "setId-localId"
+            validCards.sort((a, b) => {
+                const setA = a.id.split('-')[0];
+                const setB = b.id.split('-')[0];
+                const indexA = tcgdexSets.findIndex(s => s.id === setA);
+                const indexB = tcgdexSets.findIndex(s => s.id === setB);
+
+                // If they are in the same set, sort by localId (numeric parsing)
+                if (indexA === indexB) {
+                    const localA = parseInt(a.localId.replace(/\D/g, '')) || 0;
+                    const localB = parseInt(b.localId.replace(/\D/g, '')) || 0;
+                    return searchSort === 'newest' ? localB - localA : localA - localB;
+                }
+
+                return searchSort === 'newest' ? indexB - indexA : indexA - indexB;
+            });
+
             setSearchResults(validCards);
         } catch (error) {
             console.error("Error fetching from TCGdex:", error);
@@ -194,14 +249,44 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         setCurrentPage(1);
     };
 
-    const filteredProducts = filterCategory === 'All'
-        ? products
-        : products.filter(p => p.category === filterCategory);
+    const handleSortChange = (e) => {
+        setInventorySort(e.target.value);
+        setCurrentPage(1);
+    };
 
-    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    // Sort and filter the actual Inventory
+    const processedProducts = React.useMemo(() => {
+        let filtered = filterCategory === 'All'
+            ? [...products]
+            : products.filter(p => p.category === filterCategory);
+
+        filtered.sort((a, b) => {
+            switch (inventorySort) {
+                case 'alpha-asc':
+                    return a.name.localeCompare(b.name);
+                case 'alpha-desc':
+                    return b.name.localeCompare(a.name);
+                case 'price-asc':
+                    return a.price - b.price;
+                case 'price-desc':
+                    return b.price - a.price;
+                case 'date-old':
+                    // Natural index acts as Oldest -> Newest assuming incremental DB additions
+                    return products.indexOf(a) - products.indexOf(b);
+                case 'date-new':
+                default:
+                    // Reverse index acts as Newest -> Oldest
+                    return products.indexOf(b) - products.indexOf(a);
+            }
+        });
+
+        return filtered;
+    }, [products, filterCategory, inventorySort]);
+
+    const totalPages = Math.ceil(processedProducts.length / ITEMS_PER_PAGE);
     const validCurrentPage = Math.min(currentPage, totalPages > 0 ? totalPages : 1);
     const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
-    const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const paginatedProducts = processedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
         <div className="admin-dashboard">
@@ -249,20 +334,39 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                             <h3 style={{ margin: 0, padding: 0, border: 'none' }}>Live TCGdex Card Search</h3>
                         </div>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                            Search any Pokemon card by name, click it, type a price, and it instantly adds to your store!
+                            Search any Pokemon card by name or set, and it instantly adds to your store!
                         </p>
                         <form className="admin-form" onSubmit={handleSearchTcgDex}>
-                            <div className="form-group" style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div className="form-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <select
+                                    value={searchType}
+                                    onChange={(e) => setSearchType(e.target.value)}
+                                    style={{ width: 'auto', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
+                                >
+                                    <option value="card">Card Name</option>
+                                    <option value="set">Set Name</option>
+                                </select>
                                 <input
                                     type="text"
-                                    placeholder="e.g. Charizard, Evolving Skies"
+                                    placeholder={searchType === 'card' ? "e.g. Charizard" : "e.g. Ascended Heroes"}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     style={{ flexGrow: 1 }}
                                 />
-                                <button type="submit" className="admin-submit-btn" disabled={isSearching} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
+                                <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
                                     {isSearching ? '...' : 'Search'}
                                 </button>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
+                                <select
+                                    value={searchSort}
+                                    onChange={(e) => setSearchSort(e.target.value)}
+                                    style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                </select>
                             </div>
                         </form>
 
@@ -376,18 +480,31 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                 {/* Right Side: Current Inventory Table */}
                 <section className="admin-section inventory-section glass-panel">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3>Current Inventory ({filteredProducts.length})</h3>
-                        <div className="filter-group">
-                            <label htmlFor="filterCategory" style={{ marginRight: '0.5rem' }}>Filter:</label>
-                            <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
-                                <option value="All">All Categories</option>
-                                <option value="sealed">Sealed</option>
-                                <option value="singles">Singles</option>
-                                <option value="graded">Graded</option>
-                                <option value="accessories">Accessories</option>
-                                <option value="other">Other</option>
-                            </select>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h3 style={{ margin: 0 }}>Current Inventory ({processedProducts.length})</h3>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="inventorySort" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Sort:</label>
+                                <select id="inventorySort" value={inventorySort} onChange={handleSortChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                    <option value="date-new">Date: Newest First</option>
+                                    <option value="date-old">Date: Oldest First</option>
+                                    <option value="alpha-asc">Alphabetical: A-Z</option>
+                                    <option value="alpha-desc">Alphabetical: Z-A</option>
+                                    <option value="price-asc">Price: Low to High</option>
+                                    <option value="price-desc">Price: High to Low</option>
+                                </select>
+                            </div>
+                            <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
+                                <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                    <option value="All">All Categories</option>
+                                    <option value="sealed">Sealed</option>
+                                    <option value="singles">Singles</option>
+                                    <option value="graded">Graded</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div className="table-responsive">
