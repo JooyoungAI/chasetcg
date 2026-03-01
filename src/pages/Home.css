@@ -35,8 +35,8 @@
 
 .card-row {
     display: flex;
-    gap: 1rem;
     white-space: nowrap;
+    width: max-content;
 }
 
 /* Alternate row directions for a better effect */
@@ -76,6 +76,10 @@
     object-fit: contain;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-right: 1rem;
+    /* Use margin instead of gap for perfect looping math */
+    flex-shrink: 0;
+    /* Prevent flex squishing */
 }
 
 .hero-content {
