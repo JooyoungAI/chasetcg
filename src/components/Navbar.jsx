@@ -14,9 +14,9 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
     const categories = [
         { name: 'Home', path: '/' },
         { name: 'All Products', path: '/shop' },
-        { name: 'Sealed', path: '/shop/sealed' },
         { name: 'Singles', path: '/shop/singles' },
         { name: 'Graded', path: '/shop/graded' },
+        { name: 'Sealed', path: '/shop/sealed' },
         { name: 'Accessories', path: '/shop/accessories' }
     ];
 
