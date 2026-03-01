@@ -255,20 +255,32 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
     const handleCardClick = async (card) => {
         setIsLoadingCardDetails(true);
-        setSelectedCard({ ...card, isBasic: true }); // Show basic info immediately while loading full details
+        // Show basic info immediately so the modal pops open instantly
+        setSelectedCard({ ...card, isBasic: true });
         try {
-            const res = await fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`);
-            const fullDetails = await res.json();
+            const setId = card.id.split('-')[0];
 
-            // Also fetch the specific set to get its original Release Date since the cards endpoint lacks it
+            // Fire both network requests concurrently for a huge speed boost
+            const [cardRes, setRes] = await Promise.all([
+                fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`),
+                fetch(`https://api.tcgdex.net/v2/en/sets/${setId}`).catch(() => null)
+            ]);
+
+            const fullDetails = await cardRes.json();
+
             let releaseDate = null;
-            if (fullDetails.set?.id) {
-                const setRes = await fetch(`https://api.tcgdex.net/v2/en/sets/${fullDetails.set.id}`);
+            if (setRes && setRes.ok) {
                 const setData = await setRes.json();
                 releaseDate = setData.releaseDate;
             }
 
-            setSelectedCard({ ...fullDetails, setReleaseDate: releaseDate });
+            // Safely merge, ensuring the image URL never disappears if the detail payload omits it
+            setSelectedCard({
+                ...card,
+                ...fullDetails,
+                image: fullDetails.image || card.image,
+                setReleaseDate: releaseDate
+            });
         } catch (error) {
             console.error("Failed to load full card details", error);
         } finally {
