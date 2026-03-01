@@ -255,11 +255,19 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
     const handleCardClick = async (card) => {
         setIsLoadingCardDetails(true);
-        // Show basic info immediately so the modal pops open instantly
-        setSelectedCard({ ...card, isBasic: true });
-        try {
-            const setId = card.id.split('-')[0];
+        const setId = card.id.split('-')[0];
+        const matchedSet = tcgdexSets.find(s => s.id === setId);
+        const setName = matchedSet ? matchedSet.name : 'Unknown Set';
 
+        // Optimistically set the required Add To Store fields (Full Name, Set Name) so the button works instantly
+        setSelectedCard({
+            ...card,
+            name: `${card.name} - ${setName}`,
+            set: { name: setName },
+            isBasic: true
+        });
+
+        try {
             // Fire both network requests concurrently for a huge speed boost
             const [cardRes, setRes] = await Promise.all([
                 fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`),
@@ -908,23 +916,24 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                             {/* Right Column: Details */}
                             <div style={{ flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                                {isLoadingCardDetails ? (
-                                    <div style={{ padding: '2rem 0', color: 'var(--text-secondary)' }}>Loading extended card details...</div>
-                                ) : (
-                                    <>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.5rem 1rem', fontSize: '0.95rem' }}>
-                                            {selectedCard.set?.name && (
-                                                <>
-                                                    <strong style={{ color: 'var(--text-secondary)' }}>Set:</strong>
-                                                    <span>{selectedCard.set.name}</span>
-                                                </>
-                                            )}
-                                            {selectedCard.localId && (
-                                                <>
-                                                    <strong style={{ color: 'var(--text-secondary)' }}>Card No:</strong>
-                                                    <span>{selectedCard.localId}</span>
-                                                </>
-                                            )}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.5rem 1rem', fontSize: '0.95rem' }}>
+                                    {selectedCard.set?.name && (
+                                        <>
+                                            <strong style={{ color: 'var(--text-secondary)' }}>Set:</strong>
+                                            <span>{selectedCard.set.name}</span>
+                                        </>
+                                    )}
+                                    {selectedCard.localId && (
+                                        <>
+                                            <strong style={{ color: 'var(--text-secondary)' }}>Card No:</strong>
+                                            <span>{selectedCard.localId}</span>
+                                        </>
+                                    )}
+
+                                    {isLoadingCardDetails ? (
+                                        <div style={{ gridColumn: '1 / -1', padding: '1rem 0', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Loading extended details...</div>
+                                    ) : (
+                                        <>
                                             {selectedCard.rarity && (
                                                 <>
                                                     <strong style={{ color: 'var(--text-secondary)' }}>Rarity:</strong>
@@ -961,25 +970,25 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                     <span>{new Date(selectedCard.setReleaseDate).toLocaleDateString()}</span>
                                                 </>
                                             )}
-                                        </div>
+                                        </>
+                                    )}
+                                </div>
 
-                                        {selectedCard.attacks && selectedCard.attacks.length > 0 && (
-                                            <div style={{ marginTop: '0.5rem' }}>
-                                                <strong style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.25rem' }}>Attacks</strong>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                                    {selectedCard.attacks.map((attack, idx) => (
-                                                        <div key={idx} style={{ fontSize: '0.9rem', background: 'rgba(150,150,150,0.05)', padding: '0.5rem', borderRadius: '0.25rem' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.25rem' }}>
-                                                                <span>{attack.name}</span>
-                                                                {attack.damage && <span>{attack.damage}</span>}
-                                                            </div>
-                                                            {attack.effect && <div style={{ color: 'var(--text-secondary)' }}>{attack.effect}</div>}
-                                                        </div>
-                                                    ))}
+                                {!isLoadingCardDetails && selectedCard.attacks && selectedCard.attacks.length > 0 && (
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <strong style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.25rem' }}>Attacks</strong>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            {selectedCard.attacks.map((attack, idx) => (
+                                                <div key={idx} style={{ fontSize: '0.9rem', background: 'rgba(150,150,150,0.05)', padding: '0.5rem', borderRadius: '0.25rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                                                        <span>{attack.name}</span>
+                                                        {attack.damage && <span>{attack.damage}</span>}
+                                                    </div>
+                                                    {attack.effect && <div style={{ color: 'var(--text-secondary)' }}>{attack.effect}</div>}
                                                 </div>
-                                            </div>
-                                        )}
-                                    </>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
 
                                 <div style={{ marginTop: 'auto', paddingTop: '1.5rem' }}>
@@ -994,7 +1003,6 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             }}
                                             className="admin-submit-btn"
                                             style={{ flex: 1, margin: 0, padding: '0.75rem' }}
-                                            disabled={isLoadingCardDetails}
                                         >
                                             Add to Store
                                         </button>
