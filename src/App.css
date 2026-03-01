@@ -1,13 +1,17 @@
 #root {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
 .main-content {
   margin-top: 4rem;
-  padding-top: 2rem;
+  padding: 2rem;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .catalog-header {

@@ -130,12 +130,11 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
             // TCGdex returns an array of objects: { id, localId, name, image }
             // Filter out items without an image, and rigorously exclude Pokemon TCG Pocket sets
+            const pocketPrefixes = ['A1', 'A1a', 'A2', 'A2a', 'A2b', 'A3', 'A3a', 'A3b', 'A4', 'A4a', 'P-A', 'PROMOP'];
             let validCards = (data || []).filter(c =>
                 c.image &&
                 !c.id.includes('pocket') &&
-                !c.id.includes('A1') &&
-                !c.id.includes('G1') &&
-                !c.id.includes('PROMOP')
+                !pocketPrefixes.some(prefix => c.id.startsWith(prefix + '-'))
             );
 
             // Fetch extra details for each to get the actual Set Name if we need to filter by it locally
