@@ -50,7 +50,6 @@ export default function Home() {
 
             {/* Hero Content Overlay */}
             <div className="hero-wrapper">
-                <h1 className="hero-title">Welcome to Chase TCG</h1>
                 <div className="hero-content glass-panel">
                     <h2 className="hero-subtitle">The ultimate destination for premium Pokemon collectibles.</h2>
 
