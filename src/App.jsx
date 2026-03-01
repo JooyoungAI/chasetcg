@@ -45,7 +45,7 @@ function CategoryPage({ items, addToCart }) {
       {displayedItems.length === 0 ? (
         <p style={{ textAlign: 'center', marginTop: '2rem' }}>No products found in this category.</p>
       ) : (
-        <Catalog items={displayedItems} addToCart={addToCart} />
+        <Catalog items={displayedItems} addToCart={addToCart} categoryId={categoryId} />
       )}
     </>
   )

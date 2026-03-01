@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import ItemCard from './ItemCard';
 import './Catalog.css';
 
-export default function Catalog({ items, addToCart }) {
+export default function Catalog({ items, addToCart, categoryId }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState('date-new'); // Default to newest first
     const [searchQuery, setSearchQuery] = useState('');
+    const [rarityFilter, setRarityFilter] = useState('All');
     const ITEMS_PER_PAGE = 48;
+
+    const uniqueRarities = React.useMemo(() => {
+        return [...new Set(items.map(item => item.rarity).filter(Boolean))].sort();
+    }, [items]);
 
     // Memoize the sorted items so we don't recalculate unless items, sortOption, or search changes
     const sortedItems = React.useMemo(() => {
@@ -18,6 +23,11 @@ export default function Catalog({ items, addToCart }) {
             itemsCopy = itemsCopy.filter(item =>
                 (item.name || '').toLowerCase().includes(lowerQuery)
             );
+        }
+
+        // Filter by rarity if active
+        if (rarityFilter !== 'All') {
+            itemsCopy = itemsCopy.filter(item => item.rarity === rarityFilter);
         }
 
         switch (sortOption) {
@@ -35,7 +45,7 @@ export default function Catalog({ items, addToCart }) {
             default:
                 return itemsCopy.reverse(); // Reverse fetch order (newest first)
         }
-    }, [items, sortOption, searchQuery]);
+    }, [items, sortOption, searchQuery, rarityFilter]);
 
     const totalPages = Math.ceil(sortedItems.length / ITEMS_PER_PAGE);
     const validCurrentPage = Math.min(currentPage, totalPages > 0 ? totalPages : 1);
@@ -45,7 +55,7 @@ export default function Catalog({ items, addToCart }) {
     // Reset to page 1 if criteria changes
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [items, sortOption, searchQuery]);
+    }, [items, sortOption, searchQuery, rarityFilter]);
 
     return (
         <div>
@@ -71,21 +81,40 @@ export default function Catalog({ items, addToCart }) {
                     <strong style={{ color: 'black', fontSize: '1.1rem' }}>{sortedItems.length} Products</strong>
                 </div>
 
-                <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Sort By:</label>
-                    <select
-                        id="sort-dropdown"
-                        value={sortOption}
-                        onChange={(e) => setSortOption(e.target.value)}
-                        style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none', minWidth: '0' }}
-                    >
-                        <option value="date-new">Date: Newest to Oldest</option>
-                        <option value="date-old">Date: Oldest to Newest</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="alpha-az">Alphabetical: A-Z</option>
-                        <option value="alpha-za">Alphabetical: Z-A</option>
-                    </select>
+                <div style={{ flex: '1 1 500px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    {categoryId === 'singles' && uniqueRarities.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <label htmlFor="rarity-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Rarity:</label>
+                            <select
+                                id="rarity-dropdown"
+                                value={rarityFilter}
+                                onChange={(e) => setRarityFilter(e.target.value)}
+                                style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}
+                            >
+                                <option value="All">All Rarities</option>
+                                {uniqueRarities.map(rarity => (
+                                    <option key={rarity} value={rarity}>{rarity}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Sort By:</label>
+                        <select
+                            id="sort-dropdown"
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value)}
+                            style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}
+                        >
+                            <option value="date-new">Date: Newest to Oldest</option>
+                            <option value="date-old">Date: Oldest to Newest</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="alpha-az">Alphabetical: A-Z</option>
+                            <option value="alpha-za">Alphabetical: Z-A</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
