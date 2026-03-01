@@ -20,10 +20,13 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 25;
 
+    // Admin Dashboard Tabs
+    const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' or 'search'
+
     // Search TCGdex States
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchType, setSearchType] = useState('card'); // 'card' or 'set'
-    const [searchSort, setSearchSort] = useState('newest'); // 'newest' or 'oldest'
+    const [searchCardName, setSearchCardName] = useState('');
+    const [searchSetName, setSearchSetName] = useState('');
+    const [searchSort, setSearchSort] = useState('cardno-asc'); // 'cardno-asc' or 'cardno-desc'
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [tcgdexSets, setTcgdexSets] = useState([]);
@@ -84,52 +87,63 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
     const handleSearchTcgDex = async (e) => {
         e.preventDefault();
-        if (!searchQuery.trim()) return;
+        if (!searchCardName.trim() && !searchSetName.trim()) return;
 
         setIsSearching(true);
         setSearchResults([]);
 
         try {
             let fetchUrl = '';
+            let isSetFilteredLocal = false;
+            let targetSetId = null;
 
-            if (searchType === 'card') {
-                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchQuery)}`;
-            } else if (searchType === 'set') {
-                // Find Set ID by fuzzy matching the query against pre-fetched sets
-                const lowerQuery = searchQuery.toLowerCase();
-                const matchedSet = tcgdexSets.find(s => s.name.toLowerCase().includes(lowerQuery));
+            // If a set name is provided, find its ID from our prefetched list
+            if (searchSetName.trim()) {
+                const lowerSetQuery = searchSetName.toLowerCase();
+                const matchedSet = tcgdexSets.find(s => s.name.toLowerCase().includes(lowerSetQuery));
 
                 if (!matchedSet) {
-                    alert(`Could not find a Set matching "${searchQuery}".`);
+                    alert(`Could not find a Set matching "${searchSetName}".`);
                     setIsSearching(false);
                     return;
                 }
-                fetchUrl = `https://api.tcgdex.net/v2/en/cards?set=${matchedSet.id}`;
+                targetSetId = matchedSet.id;
+            }
+
+            // Determine fetch strategy
+            if (searchCardName.trim() && targetSetId) {
+                // If BOTH are provided, fetch by card name, then filter by set locally
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchCardName)}`;
+                isSetFilteredLocal = true;
+            } else if (searchCardName.trim()) {
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchCardName)}`;
+            } else if (targetSetId) {
+                fetchUrl = `https://api.tcgdex.net/v2/en/cards?set=${targetSetId}`;
             }
 
             const response = await fetch(fetchUrl);
             const data = await response.json();
 
             // TCGdex returns an array of objects: { id, localId, name, image }
-            // Filter out items without an image to avoid broken UI
-            let validCards = (data || []).filter(c => c.image);
+            // Filter out items without an image, and exclude Pokemon TCG Pocket cards
+            let validCards = (data || []).filter(c =>
+                c.image &&
+                (!c.id.includes('A1') && !c.id.includes('pocket')) // Very basic Pocket exclusion based on typical IDs
+            );
 
-            // Sort Chronologically utilizing the indexOf the card's Set in our pre-fetched sets array
-            // Card IDs are typically "setId-localId"
+            // Fetch extra details for each to get the actual Set Name if we need to filter by it locally
+            // Warning: The basic /cards search endpoint doesn't return `set.name`.
+            // But if we did a combined search, we must filter. In a real world app this might be N+1 fetch heavy, 
+            // but we'll approximate it by checking if the id starts with the targetSetId
+            if (isSetFilteredLocal && targetSetId) {
+                validCards = validCards.filter(c => c.id.startsWith(targetSetId));
+            }
+
+            // Sort by Card Number (localId)
             validCards.sort((a, b) => {
-                const setA = a.id.split('-')[0];
-                const setB = b.id.split('-')[0];
-                const indexA = tcgdexSets.findIndex(s => s.id === setA);
-                const indexB = tcgdexSets.findIndex(s => s.id === setB);
-
-                // If they are in the same set, sort by localId (numeric parsing)
-                if (indexA === indexB) {
-                    const localA = parseInt(a.localId.replace(/\D/g, '')) || 0;
-                    const localB = parseInt(b.localId.replace(/\D/g, '')) || 0;
-                    return searchSort === 'newest' ? localB - localA : localA - localB;
-                }
-
-                return searchSort === 'newest' ? indexB - indexA : indexA - indexB;
+                const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
+                const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
+                return searchSort === 'cardno-asc' ? localA - localB : localB - localA;
             });
 
             setSearchResults(validCards);
@@ -319,272 +333,316 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 </div>
             </header>
 
-            <div className="admin-content" style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 2fr', gap: '2rem' }}>
+            <div className="admin-tabs" style={{ display: 'flex', gap: '1rem', borderBottom: '2px solid var(--panel-border)', marginBottom: '2rem' }}>
+                <button
+                    onClick={() => setActiveTab('inventory')}
+                    style={{
+                        padding: '1rem 2rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: activeTab === 'inventory' ? '3px solid var(--accent)' : '3px solid transparent',
+                        color: activeTab === 'inventory' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'inventory' ? 'bold' : 'normal',
+                        cursor: 'pointer',
+                        fontSize: '1.1rem'
+                    }}
+                >
+                    Store Inventory
+                </button>
+                <button
+                    onClick={() => setActiveTab('search')}
+                    style={{
+                        padding: '1rem 2rem',
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: activeTab === 'search' ? '3px solid var(--accent)' : '3px solid transparent',
+                        color: activeTab === 'search' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: activeTab === 'search' ? 'bold' : 'normal',
+                        cursor: 'pointer',
+                        fontSize: '1.1rem'
+                    }}
+                >
+                    TCGdex Live Search
+                </button>
+            </div>
 
-                {/* Left Side: Forms container */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="admin-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-                    {/* TCGdex API Search Form */}
-                    <section className="admin-section glass-panel" style={{ padding: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            <h3 style={{ margin: 0, padding: 0, border: 'none' }}>Live TCGdex Card Search</h3>
-                        </div>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                            Search any Pokemon card by name or set, and it instantly adds to your store!
-                        </p>
-                        <form className="admin-form" onSubmit={handleSearchTcgDex}>
-                            <div className="form-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                <select
-                                    value={searchType}
-                                    onChange={(e) => setSearchType(e.target.value)}
-                                    style={{ width: 'auto', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
-                                >
-                                    <option value="card">Card Name</option>
-                                    <option value="set">Set Name</option>
-                                </select>
-                                <input
-                                    type="text"
-                                    placeholder={searchType === 'card' ? "e.g. Charizard" : "e.g. Ascended Heroes"}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ flexGrow: 1 }}
-                                />
-                                <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
-                                    {isSearching ? '...' : 'Search'}
-                                </button>
+                {activeTab === 'search' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+
+                        {/* TCGdex API Search Form */}
+                        <section className="admin-section glass-panel" style={{ padding: '1.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <h3 style={{ margin: 0, padding: 0, border: 'none' }}>Live TCGdex Card Search</h3>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
-                                <select
-                                    value={searchSort}
-                                    onChange={(e) => setSearchSort(e.target.value)}
-                                    style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
-                                >
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
-                                </select>
-                            </div>
-                        </form>
-
-                        {/* Search Results Display */}
-                        {searchResults.length > 0 && (
-                            <div style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', paddingRight: '0.5rem' }}>
-                                {searchResults.map(card => (
-                                    <div
-                                        key={card.id}
-                                        onClick={() => handleAddFromSearch(card)}
-                                        style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                        title={`Click to add ${card.name}`}
-                                    >
-                                        <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.25rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                                        <span style={{ fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 'bold' }}>{card.name}</span>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                                Search any Pokemon card by name or set, and it instantly adds to your store!
+                            </p>
+                            <form className="admin-form" onSubmit={handleSearchTcgDex}>
+                                <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Card Name (e.g. Pikachu)"
+                                            value={searchCardName}
+                                            onChange={(e) => setSearchCardName(e.target.value)}
+                                            style={{ flexGrow: 1 }}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Set Name (e.g. Ascended Heroes)"
+                                            value={searchSetName}
+                                            onChange={(e) => setSearchSetName(e.target.value)}
+                                            list="set-options"
+                                            style={{ flexGrow: 1 }}
+                                        />
+                                        <datalist id="set-options">
+                                            {tcgdexSets.map(set => (
+                                                <option key={set.id} value={set.name} />
+                                            ))}
+                                        </datalist>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                        {searchResults.length === 0 && searchQuery && !isSearching && (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Press search to find cards...</span>
-                        )}
-                    </section>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center' }}>
+                                        <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: 'auto', padding: '0.5rem 1.5rem', margin: 0 }}>
+                                            {isSearching ? '...' : 'Search'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
+                                    <select
+                                        value={searchSort}
+                                        onChange={(e) => setSearchSort(e.target.value)}
+                                        style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
+                                    >
+                                        <option value="cardno-asc">Card No. Low-High</option>
+                                        <option value="cardno-desc">Card No. High-Low</option>
+                                    </select>
+                                </div>
+                            </form>
 
-                    {/* Manual Add/Edit Product Form */}
-                    <section className="admin-section form-section glass-panel">
-                        <h3 style={{ borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-                            {editingProductId ? 'Edit Specific Product' : 'Add Custom Product'}
-                        </h3>
-                        <form className="admin-form" onSubmit={handleSubmit}>
+                            {/* Search Results Display */}
+                            {searchResults.length > 0 && (
+                                <div style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', paddingRight: '0.5rem' }}>
+                                    {searchResults.map(card => (
+                                        <div
+                                            key={card.id}
+                                            onClick={() => handleAddFromSearch(card)}
+                                            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s' }}
+                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                            title={`Click to add ${card.name}`}
+                                        >
+                                            <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.25rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                                            <span style={{ fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 'bold' }}>{card.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {searchResults.length === 0 && (searchCardName || searchSetName) && !isSearching && (
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Press search to find cards...</span>
+                            )}
+                        </section>
 
-                            <div className="form-group">
-                                <label htmlFor="name">Product Name *</label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    value={newProduct.name}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                            </div>
+                        {/* Manual Add/Edit Product Form */}
+                        <section className="admin-section form-section glass-panel">
+                            <h3 style={{ borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+                                {editingProductId ? 'Edit Specific Product' : 'Add Custom Product'}
+                            </h3>
+                            <form className="admin-form" onSubmit={handleSubmit}>
 
-                            <div className="form-group">
-                                <label htmlFor="price">Price ($) *</label>
-                                <input
-                                    type="number"
-                                    id="price"
-                                    name="price"
-                                    step="0.01"
-                                    value={newProduct.price}
-                                    onChange={handleInputChange}
-                                    required
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label htmlFor="name">Product Name *</label>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
+                                        value={newProduct.name}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label htmlFor="category">Category</label>
-                                <select
-                                    id="category"
-                                    name="category"
-                                    value={newProduct.category}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="sealed">Sealed</option>
-                                    <option value="singles">Singles</option>
-                                    <option value="graded">Graded</option>
-                                    <option value="accessories">Accessories</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
+                                <div className="form-group">
+                                    <label htmlFor="price">Price ($) *</label>
+                                    <input
+                                        type="number"
+                                        id="price"
+                                        name="price"
+                                        step="0.01"
+                                        value={newProduct.price}
+                                        onChange={handleInputChange}
+                                        required
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label htmlFor="image">Image URL</label>
-                                <input
-                                    type="url"
-                                    id="image"
-                                    name="image"
-                                    placeholder="https://..."
-                                    value={newProduct.image}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label htmlFor="category">Category</label>
+                                    <select
+                                        id="category"
+                                        name="category"
+                                        value={newProduct.category}
+                                        onChange={handleInputChange}
+                                    >
+                                        <option value="sealed">Sealed</option>
+                                        <option value="singles">Singles</option>
+                                        <option value="graded">Graded</option>
+                                        <option value="accessories">Accessories</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
 
-                            <div className="form-group">
-                                <label htmlFor="description">Description</label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    rows="3"
-                                    value={newProduct.description}
-                                    onChange={handleInputChange}
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label htmlFor="image">Image URL</label>
+                                    <input
+                                        type="url"
+                                        id="image"
+                                        name="image"
+                                        placeholder="https://..."
+                                        value={newProduct.image}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
 
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button type="submit" className="admin-submit-btn">
-                                    {editingProductId ? 'Update Product' : 'Add Product to Store'}
-                                </button>
-                                {editingProductId && (
-                                    <button type="button" onClick={handleCancelEdit} style={{ background: '#64748b', color: 'white', padding: '0.75rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>
-                                        Cancel
+                                <div className="form-group">
+                                    <label htmlFor="description">Description</label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        rows="3"
+                                        value={newProduct.description}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button type="submit" className="admin-submit-btn">
+                                        {editingProductId ? 'Update Product' : 'Add Product to Store'}
                                     </button>
-                                )}
-                            </div>
-                        </form>
-                    </section>
-                </div>
+                                    {editingProductId && (
+                                        <button type="button" onClick={handleCancelEdit} style={{ background: '#64748b', color: 'white', padding: '0.75rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>
+                                            Cancel
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </section>
+                    </div>
+                )}
 
-                {/* Right Side: Current Inventory Table */}
-                <section className="admin-section inventory-section glass-panel">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                        <h3 style={{ margin: 0 }}>Current Inventory ({processedProducts.length})</h3>
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="inventorySort" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Sort:</label>
-                                <select id="inventorySort" value={inventorySort} onChange={handleSortChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
-                                    <option value="date-new">Date: Newest First</option>
-                                    <option value="date-old">Date: Oldest First</option>
-                                    <option value="alpha-asc">Alphabetical: A-Z</option>
-                                    <option value="alpha-desc">Alphabetical: Z-A</option>
-                                    <option value="price-asc">Price: Low to High</option>
-                                    <option value="price-desc">Price: High to Low</option>
-                                </select>
-                            </div>
-                            <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
-                                <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
-                                    <option value="All">All Categories</option>
-                                    <option value="sealed">Sealed</option>
-                                    <option value="singles">Singles</option>
-                                    <option value="graded">Graded</option>
-                                    <option value="accessories">Accessories</option>
-                                    <option value="other">Other</option>
-                                </select>
+                {activeTab === 'inventory' && (
+                    <section className="admin-section inventory-section glass-panel">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Current Inventory ({processedProducts.length})</h3>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="inventorySort" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Sort:</label>
+                                    <select id="inventorySort" value={inventorySort} onChange={handleSortChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                        <option value="date-new">Date: Newest First</option>
+                                        <option value="date-old">Date: Oldest First</option>
+                                        <option value="alpha-asc">Alphabetical: A-Z</option>
+                                        <option value="alpha-desc">Alphabetical: Z-A</option>
+                                        <option value="price-asc">Price: Low to High</option>
+                                        <option value="price-desc">Price: High to Low</option>
+                                    </select>
+                                </div>
+                                <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
+                                    <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                        <option value="All">All Categories</option>
+                                        <option value="sealed">Sealed</option>
+                                        <option value="singles">Singles</option>
+                                        <option value="graded">Graded</option>
+                                        <option value="accessories">Accessories</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="table-responsive">
-                        <table className="inventory-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Price</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedProducts.map(product => (
-                                    <tr key={product.id}>
-                                        <td>
-                                            <img src={product.image} alt={product.name} className="admin-table-img" />
-                                        </td>
-                                        <td className="font-medium">{product.name}</td>
-                                        <td>
-                                            <span className={`category-badge ${product.category}`}>
-                                                {product.category}
-                                            </span>
-                                        </td>
-                                        <td className="font-bold text-accent">${product.price.toFixed(2)}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                <button
-                                                    className="edit-btn"
-                                                    onClick={() => handleEdit(product)}
-                                                    style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                    aria-label="Edit product"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={() => handleDelete(product.id)}
-                                                    aria-label="Delete product"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {paginatedProducts.length === 0 && (
+                        <div className="table-responsive">
+                            <table className="inventory-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan="5" className="text-center">No products found.</td>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Actions</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {totalPages > 1 && (
-                        <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={validCurrentPage === 1}
-                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
-                            >
-                                Previous
-                            </button>
-                            <span style={{ fontWeight: 'bold' }}>
-                                Page {validCurrentPage} of {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={validCurrentPage === totalPages}
-                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                            >
-                                Next
-                            </button>
+                                </thead>
+                                <tbody>
+                                    {paginatedProducts.map(product => (
+                                        <tr key={product.id}>
+                                            <td>
+                                                <img src={product.image} alt={product.name} className="admin-table-img" />
+                                            </td>
+                                            <td className="font-medium">{product.name}</td>
+                                            <td>
+                                                <span className={`category-badge ${product.category}`}>
+                                                    {product.category}
+                                                </span>
+                                            </td>
+                                            <td className="font-bold text-accent">${product.price.toFixed(2)}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                    <button
+                                                        className="edit-btn"
+                                                        onClick={() => handleEdit(product)}
+                                                        style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                        aria-label="Edit product"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="delete-btn"
+                                                        onClick={() => handleDelete(product.id)}
+                                                        aria-label="Delete product"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {paginatedProducts.length === 0 && (
+                                        <tr>
+                                            <td colSpan="5" className="text-center">No products found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                    )}
-                </section>
+
+                        {totalPages > 1 && (
+                            <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={validCurrentPage === 1}
+                                    style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                >
+                                    Previous
+                                </button>
+                                <span style={{ fontWeight: 'bold' }}>
+                                    Page {validCurrentPage} of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={validCurrentPage === totalPages}
+                                    style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </section>
+                )}
 
             </div>
-        </div>
+        </div >
     );
 }
