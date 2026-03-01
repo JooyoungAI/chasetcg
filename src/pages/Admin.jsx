@@ -19,6 +19,11 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 25;
 
+    // Search TCGdex States
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewProduct({ ...newProduct, [name]: value });
@@ -55,6 +60,67 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 handleCancelEdit();
                 alert('Product successfully added!');
             }
+        }
+    };
+
+    const handleSearchTcgDex = async (e) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) return;
+
+        setIsSearching(true);
+        setSearchResults([]);
+
+        try {
+            const response = await fetch(`https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(searchQuery)}`);
+            const data = await response.json();
+
+            // TCGdex returns an array of objects: { id, localId, name, image }
+            // Filter out items without an image to avoid broken UI
+            const validCards = (data || []).filter(c => c.image);
+            setSearchResults(validCards);
+        } catch (error) {
+            console.error("Error fetching from TCGdex:", error);
+            alert("Failed to search TCGdex. Try again.");
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleAddFromSearch = async (card) => {
+        // Ask for price
+        const priceStr = window.prompt(`Set selling price for ${card.name} (e.g. 5.99):`);
+        if (priceStr === null) return; // User cancelled
+
+        const price = parseFloat(priceStr);
+        if (isNaN(price) || price < 0) {
+            alert('Invalid price entered. Cancelled.');
+            return;
+        }
+
+        try {
+            // We need to fetch the specific card details to get the exact Set Name 
+            // because the v2/en/cards search endpoint doesn't return the set explicitly
+            const detailRes = await fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`);
+            const detailData = await detailRes.json();
+
+            const setName = detailData.set?.name || 'Unknown Set';
+            const fullName = `${detailData.name} - ${setName}`;
+
+            const productToAdd = {
+                name: fullName,
+                price: price,
+                category: 'singles', // default to singles
+                image: `${card.image}/high.webp`,
+                description: 'A genuine Pokémon Trading Card.',
+            };
+
+            const success = await addProduct(productToAdd);
+            if (success) {
+                alert(`Successfully added ${fullName} for $${price.toFixed(2)}`);
+            }
+        } catch (error) {
+            console.error("Error adding searched card: ", error);
+            alert("Something went wrong verifying the card details.");
         }
     };
 
@@ -168,89 +234,145 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 </div>
             </header>
 
-            <div className="admin-content">
+            <div className="admin-content" style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 2fr', gap: '2rem' }}>
 
-                {/* Left Side: Add/Edit Product Form */}
-                <section className="admin-section form-section glass-panel">
-                    <h3>{editingProductId ? 'Edit Product' : 'Add New Product'}</h3>
-                    <form className="admin-form" onSubmit={handleSubmit}>
+                {/* Left Side: Forms container */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-                        <div className="form-group">
-                            <label htmlFor="name">Product Name *</label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={newProduct.name}
-                                onChange={handleInputChange}
-                                required
-                            />
+                    {/* TCGdex API Search Form */}
+                    <section className="admin-section glass-panel" style={{ padding: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <h3 style={{ margin: 0, padding: 0, border: 'none' }}>Live TCGdex Card Search</h3>
                         </div>
-
-                        <div className="form-group">
-                            <label htmlFor="price">Price ($) *</label>
-                            <input
-                                type="number"
-                                id="price"
-                                name="price"
-                                step="0.01"
-                                value={newProduct.price}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="category">Category</label>
-                            <select
-                                id="category"
-                                name="category"
-                                value={newProduct.category}
-                                onChange={handleInputChange}
-                            >
-                                <option value="sealed">Sealed</option>
-                                <option value="singles">Singles</option>
-                                <option value="graded">Graded</option>
-                                <option value="accessories">Accessories</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="image">Image URL</label>
-                            <input
-                                type="url"
-                                id="image"
-                                name="image"
-                                placeholder="https://..."
-                                value={newProduct.image}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="description">Description</label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                rows="3"
-                                value={newProduct.description}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button type="submit" className="admin-submit-btn">
-                                {editingProductId ? 'Update Product' : 'Add Product to Store'}
-                            </button>
-                            {editingProductId && (
-                                <button type="button" onClick={handleCancelEdit} style={{ background: '#64748b', color: 'white', padding: '0.75rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>
-                                    Cancel
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                            Search any Pokemon card by name, click it, type a price, and it instantly adds to your store!
+                        </p>
+                        <form className="admin-form" onSubmit={handleSearchTcgDex}>
+                            <div className="form-group" style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Charizard, Evolving Skies"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    style={{ flexGrow: 1 }}
+                                />
+                                <button type="submit" className="admin-submit-btn" disabled={isSearching} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
+                                    {isSearching ? '...' : 'Search'}
                                 </button>
-                            )}
-                        </div>
-                    </form>
-                </section>
+                            </div>
+                        </form>
+
+                        {/* Search Results Display */}
+                        {searchResults.length > 0 && (
+                            <div style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', paddingRight: '0.5rem' }}>
+                                {searchResults.map(card => (
+                                    <div
+                                        key={card.id}
+                                        onClick={() => handleAddFromSearch(card)}
+                                        style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        title={`Click to add ${card.name}`}
+                                    >
+                                        <img src={`${card.image}/low.webp`} alt={card.name} style={{ width: '100%', borderRadius: '0.25rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                                        <span style={{ fontSize: '0.7rem', marginTop: '0.25rem', fontWeight: 'bold' }}>{card.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {searchResults.length === 0 && searchQuery && !isSearching && (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Press search to find cards...</span>
+                        )}
+                    </section>
+
+                    {/* Manual Add/Edit Product Form */}
+                    <section className="admin-section form-section glass-panel">
+                        <h3 style={{ borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+                            {editingProductId ? 'Edit Specific Product' : 'Add Custom Product'}
+                        </h3>
+                        <form className="admin-form" onSubmit={handleSubmit}>
+
+                            <div className="form-group">
+                                <label htmlFor="name">Product Name *</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={newProduct.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="price">Price ($) *</label>
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    step="0.01"
+                                    value={newProduct.price}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="category">Category</label>
+                                <select
+                                    id="category"
+                                    name="category"
+                                    value={newProduct.category}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="sealed">Sealed</option>
+                                    <option value="singles">Singles</option>
+                                    <option value="graded">Graded</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="image">Image URL</label>
+                                <input
+                                    type="url"
+                                    id="image"
+                                    name="image"
+                                    placeholder="https://..."
+                                    value={newProduct.image}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="description">Description</label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                    value={newProduct.description}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button type="submit" className="admin-submit-btn">
+                                    {editingProductId ? 'Update Product' : 'Add Product to Store'}
+                                </button>
+                                {editingProductId && (
+                                    <button type="button" onClick={handleCancelEdit} style={{ background: '#64748b', color: 'white', padding: '0.75rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </section>
+                </div>
 
                 {/* Right Side: Current Inventory Table */}
                 <section className="admin-section inventory-section glass-panel">
