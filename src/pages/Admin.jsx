@@ -139,11 +139,27 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 validCards = validCards.filter(c => c.id.startsWith(targetSetId));
             }
 
-            // Sort by Card Number (localId)
+            // Sort by Card Number (localId) or Chronologically (Set Index)
             validCards.sort((a, b) => {
-                const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
-                const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
-                return searchSort === 'cardno-asc' ? localA - localB : localB - localA;
+                const setA = a.id.split('-')[0];
+                const setB = b.id.split('-')[0];
+                const indexA = tcgdexSets.findIndex(s => s.id === setA);
+                const indexB = tcgdexSets.findIndex(s => s.id === setB);
+
+                if (searchSort === 'newest' || searchSort === 'oldest') {
+                    // If they are in the same set, fallback to localId
+                    if (indexA === indexB) {
+                        const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
+                        const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
+                        return searchSort === 'newest' ? localB - localA : localA - localB;
+                    }
+                    return searchSort === 'newest' ? indexB - indexA : indexA - indexB;
+                } else {
+                    // Sort purely by Card No (localId)
+                    const localA = parseInt(a.localId?.replace(/\D/g, '')) || 0;
+                    const localB = parseInt(b.localId?.replace(/\D/g, '')) || 0;
+                    return searchSort === 'cardno-asc' ? localA - localB : localB - localA;
+                }
             });
 
             setSearchResults(validCards);
@@ -420,6 +436,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                         onChange={(e) => setSearchSort(e.target.value)}
                                         style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
                                     >
+                                        <option value="newest">Newest First (Release)</option>
+                                        <option value="oldest">Oldest First (Release)</option>
                                         <option value="cardno-asc">Card No. Low-High</option>
                                         <option value="cardno-desc">Card No. High-Low</option>
                                     </select>
@@ -428,7 +446,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '1rem', maxHeight: '600px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
@@ -448,7 +466,11 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Press search to find cards...</span>
                             )}
                         </section>
+                    </div>
+                )}
 
+                {activeTab === 'inventory' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 2fr', gap: '2rem' }}>
                         {/* Manual Add/Edit Product Form */}
                         <section className="admin-section form-section glass-panel">
                             <h3 style={{ borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
@@ -532,117 +554,114 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                 </div>
                             </form>
                         </section>
+
+                        <section className="admin-section inventory-section glass-panel">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                <h3 style={{ margin: 0 }}>Current Inventory ({processedProducts.length})</h3>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                        <label htmlFor="inventorySort" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Sort:</label>
+                                        <select id="inventorySort" value={inventorySort} onChange={handleSortChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                            <option value="date-new">Date: Newest First</option>
+                                            <option value="date-old">Date: Oldest First</option>
+                                            <option value="alpha-asc">Alphabetical: A-Z</option>
+                                            <option value="alpha-desc">Alphabetical: Z-A</option>
+                                            <option value="price-asc">Price: Low to High</option>
+                                            <option value="price-desc">Price: High to Low</option>
+                                        </select>
+                                    </div>
+                                    <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
+                                        <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
+                                        <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
+                                            <option value="All">All Categories</option>
+                                            <option value="sealed">Sealed</option>
+                                            <option value="singles">Singles</option>
+                                            <option value="graded">Graded</option>
+                                            <option value="accessories">Accessories</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="table-responsive">
+                                <table className="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedProducts.map(product => (
+                                            <tr key={product.id}>
+                                                <td>
+                                                    <img src={product.image} alt={product.name} className="admin-table-img" />
+                                                </td>
+                                                <td className="font-medium">{product.name}</td>
+                                                <td>
+                                                    <span className={`category-badge ${product.category}`}>
+                                                        {product.category}
+                                                    </span>
+                                                </td>
+                                                <td className="font-bold text-accent">${product.price.toFixed(2)}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                                        <button
+                                                            className="edit-btn"
+                                                            onClick={() => handleEdit(product)}
+                                                            style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                            aria-label="Edit product"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            className="delete-btn"
+                                                            onClick={() => handleDelete(product.id)}
+                                                            aria-label="Delete product"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {paginatedProducts.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="text-center">No products found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={validCurrentPage === 1}
+                                        style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                    >
+                                        Previous
+                                    </button>
+                                    <span style={{ fontWeight: 'bold' }}>
+                                        Page {validCurrentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={validCurrentPage === totalPages}
+                                        style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </section>
                     </div>
                 )}
-
-                {activeTab === 'inventory' && (
-                    <section className="admin-section inventory-section glass-panel">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                            <h3 style={{ margin: 0 }}>Current Inventory ({processedProducts.length})</h3>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
-                                    <label htmlFor="inventorySort" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Sort:</label>
-                                    <select id="inventorySort" value={inventorySort} onChange={handleSortChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
-                                        <option value="date-new">Date: Newest First</option>
-                                        <option value="date-old">Date: Oldest First</option>
-                                        <option value="alpha-asc">Alphabetical: A-Z</option>
-                                        <option value="alpha-desc">Alphabetical: Z-A</option>
-                                        <option value="price-asc">Price: Low to High</option>
-                                        <option value="price-desc">Price: High to Low</option>
-                                    </select>
-                                </div>
-                                <div className="filter-group" style={{ display: 'flex', alignItems: 'center' }}>
-                                    <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
-                                    <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
-                                        <option value="All">All Categories</option>
-                                        <option value="sealed">Sealed</option>
-                                        <option value="singles">Singles</option>
-                                        <option value="graded">Graded</option>
-                                        <option value="accessories">Accessories</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="table-responsive">
-                            <table className="inventory-table">
-                                <thead>
-                                    <tr>
-                                        <th>Image</th>
-                                        <th>Name</th>
-                                        <th>Category</th>
-                                        <th>Price</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedProducts.map(product => (
-                                        <tr key={product.id}>
-                                            <td>
-                                                <img src={product.image} alt={product.name} className="admin-table-img" />
-                                            </td>
-                                            <td className="font-medium">{product.name}</td>
-                                            <td>
-                                                <span className={`category-badge ${product.category}`}>
-                                                    {product.category}
-                                                </span>
-                                            </td>
-                                            <td className="font-bold text-accent">${product.price.toFixed(2)}</td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                    <button
-                                                        className="edit-btn"
-                                                        onClick={() => handleEdit(product)}
-                                                        style={{ background: '#3b82f6', color: 'white', padding: '0.35rem 0.6rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                        aria-label="Edit product"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        className="delete-btn"
-                                                        onClick={() => handleDelete(product.id)}
-                                                        aria-label="Delete product"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {paginatedProducts.length === 0 && (
-                                        <tr>
-                                            <td colSpan="5" className="text-center">No products found.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {totalPages > 1 && (
-                            <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={validCurrentPage === 1}
-                                    style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
-                                >
-                                    Previous
-                                </button>
-                                <span style={{ fontWeight: 'bold' }}>
-                                    Page {validCurrentPage} of {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={validCurrentPage === totalPages}
-                                    style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
-                    </section>
-                )}
-
             </div>
-        </div >
+        </div>
     );
 }
