@@ -118,38 +118,6 @@ function App() {
     if (isConfigured) {
       runMigration();
 
-      // Auto-patch the broken DB Images (Hidden Fates + Sealed PricingChart images)
-      const patchSealedImages = async () => {
-        const urlMap = {
-          'Evolving Skies Booster Box': 'https://storage.googleapis.com/images.pricecharting.com/1d53b2174ffd9baeadc62527270258c117f0a5087894ecef387ff96810e4eaa2/240.jpg',
-          'Roaring Skies Booster Box': 'https://storage.googleapis.com/images.pricecharting.com/6ecc52a95dec043b3742e407fc42d32716699d774a8882feb2f16fa8577948f6/240.jpg',
-          'Prismatic Evolutions Elite Trainer Box': 'https://storage.googleapis.com/images.pricecharting.com/gu5hkgduou6ijmqi/240.jpg',
-          'Base Set Booster Pack (Charizard Art)': 'https://storage.googleapis.com/images.pricecharting.com/qamcbd6yhb2jvqzl/240.jpg',
-          'Hidden Fates Elite Trainer Box': 'https://storage.googleapis.com/images.pricecharting.com/b6tqxgdoco4qalmd/240.jpg'
-        };
-
-        try {
-          for (const [name, imgUrl] of Object.entries(urlMap)) {
-            const q = query(collection(db, 'products'), where('name', '==', name));
-            const snapshot = await getDocs(q);
-            if (!snapshot.empty) {
-              for (const docSnapshot of snapshot.docs) {
-                const data = docSnapshot.data();
-                // Only patch if it is currently using the old placeholder/TCGdex logos
-                if (data.image && (data.image.includes('via.placeholder.com') || data.image.includes('assets.tcgdex.net') || data.image.includes('pokemon.com'))) {
-                  await updateDoc(docSnapshot.ref, {
-                    image: imgUrl
-                  });
-                  console.log(`Successfully patched image for: ${name}`);
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Failed to auto-patch Sealed images:', error);
-        }
-      };
-      patchSealedImages();
     }
   }, []);
 

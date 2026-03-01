@@ -767,9 +767,9 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                         <label htmlFor="filterCategory" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>Filter:</label>
                                         <select id="filterCategory" value={filterCategory} onChange={handleFilterChange} style={{ padding: '0.3rem', borderRadius: '4px', background: '#ffffff', color: '#1e293b' }}>
                                             <option value="All">All Categories</option>
-                                            <option value="sealed">Sealed</option>
                                             <option value="singles">Singles</option>
                                             <option value="graded">Graded</option>
+                                            <option value="sealed">Sealed</option>
                                             <option value="accessories">Accessories</option>
                                             <option value="other">Other</option>
                                         </select>
