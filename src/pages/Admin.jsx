@@ -101,7 +101,15 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     return (
         <div className="admin-dashboard">
             <header className="admin-header">
-                <h2>🛠️ Store Administration</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="9"></rect>
+                        <rect x="14" y="3" width="7" height="5"></rect>
+                        <rect x="14" y="12" width="7" height="9"></rect>
+                        <rect x="3" y="16" width="7" height="5"></rect>
+                    </svg>
+                    <h2 style={{ margin: 0 }}>Store Administration</h2>
+                </div>
                 <p>Manage your inventory, prices, and categories from this dashboard.</p>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                     <button
