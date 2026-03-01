@@ -364,7 +364,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     <h2 style={{ margin: 0 }}>Store Administration</h2>
                 </div>
                 <p>Manage your inventory, prices, and categories from this dashboard.</p>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
                     <button
                         onClick={handleForcedSync}
                         style={{ background: '#ec4899', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.25rem', fontSize: '0.8rem' }}
@@ -382,7 +382,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 </div>
             </header>
 
-            <div className="admin-tabs" style={{ display: 'flex', gap: '1rem', borderBottom: '2px solid var(--panel-border)', marginBottom: '2rem' }}>
+            <div className="admin-tabs" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', borderBottom: '2px solid var(--panel-border)', marginBottom: '2rem' }}>
                 <button
                     onClick={() => setActiveTab('inventory')}
                     style={{
@@ -421,94 +421,96 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
 
                         {/* TCGdex API Search Form */}
-                        <section className="admin-section glass-panel" style={{ padding: '1.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                </svg>
-                                <h3 style={{ margin: 0, padding: 0, border: 'none' }}>Live TCGdex Card Search</h3>
-                            </div>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                                Search any Pokemon card by name or set, and it instantly adds to your store!
-                            </p>
-                            <form className="admin-form" onSubmit={handleSearchTcgDex}>
-                                <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <input
-                                            type="text"
-                                            placeholder="Card Name (e.g. Pikachu)"
-                                            value={searchCardName}
-                                            onChange={(e) => setSearchCardName(e.target.value)}
-                                            style={{ flexGrow: 1 }}
-                                        />
-                                        <div style={{ position: 'relative', flexGrow: 1 }}>
+                        <section className="admin-section glass-panel" style={{ padding: '1.5rem', width: '100%' }}>
+                            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    <h3 style={{ margin: 0, padding: 0, border: 'none', textAlign: 'center', fontSize: '1.5rem' }}>Live TCGdex Card Search</h3>
+                                </div>
+                                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', textAlign: 'center' }}>
+                                    Search any Pokemon card by name or set, and it instantly adds to your store!
+                                </p>
+                                <form className="admin-form" onSubmit={handleSearchTcgDex}>
+                                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             <input
                                                 type="text"
-                                                placeholder="Set Name (e.g. Ascended Heroes)"
-                                                value={searchSetName}
-                                                onChange={(e) => {
-                                                    setSearchSetName(e.target.value);
-                                                    setShowAutocomplete(true);
-                                                }}
-                                                onFocus={() => setShowAutocomplete(true)}
-                                                onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)} // delay to allow click
-                                                style={{ width: '100%' }}
-                                                autoComplete="off"
+                                                placeholder="Card Name (e.g. Pikachu)"
+                                                value={searchCardName}
+                                                onChange={(e) => setSearchCardName(e.target.value)}
+                                                style={{ flexGrow: 1 }}
                                             />
-                                            {showAutocomplete && searchSetName && filteredSets.length > 0 && (
-                                                <ul style={{
-                                                    position: 'absolute', top: '100%', left: 0, right: 0,
-                                                    background: 'var(--panel-bg)', border: '1px solid var(--panel-border)',
-                                                    borderRadius: '4px', maxHeight: '200px', overflowY: 'auto',
-                                                    listStyle: 'none', padding: 0, margin: '0.25rem 0 0 0', zIndex: 10
-                                                }}>
-                                                    {filteredSets.map(set => (
-                                                        <li
-                                                            key={set.id}
-                                                            onClick={() => {
-                                                                setSearchSetName(set.name);
-                                                                setShowAutocomplete(false);
-                                                            }}
-                                                            style={{
-                                                                padding: '0.5rem', cursor: 'pointer',
-                                                                borderBottom: '1px solid rgba(150,150,150,0.1)'
-                                                            }}
-                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-border)'}
-                                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                                        >
-                                                            {set.name}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
+                                            <div style={{ position: 'relative', flexGrow: 1 }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Set Name (e.g. Ascended Heroes)"
+                                                    value={searchSetName}
+                                                    onChange={(e) => {
+                                                        setSearchSetName(e.target.value);
+                                                        setShowAutocomplete(true);
+                                                    }}
+                                                    onFocus={() => setShowAutocomplete(true)}
+                                                    onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)} // delay to allow click
+                                                    style={{ width: '100%' }}
+                                                    autoComplete="off"
+                                                />
+                                                {showAutocomplete && searchSetName && filteredSets.length > 0 && (
+                                                    <ul style={{
+                                                        position: 'absolute', top: '100%', left: 0, right: 0,
+                                                        background: 'var(--panel-bg)', border: '1px solid var(--panel-border)',
+                                                        borderRadius: '4px', maxHeight: '200px', overflowY: 'auto',
+                                                        listStyle: 'none', padding: 0, margin: '0.25rem 0 0 0', zIndex: 10
+                                                    }}>
+                                                        {filteredSets.map(set => (
+                                                            <li
+                                                                key={set.id}
+                                                                onClick={() => {
+                                                                    setSearchSetName(set.name);
+                                                                    setShowAutocomplete(false);
+                                                                }}
+                                                                style={{
+                                                                    padding: '0.5rem', cursor: 'pointer',
+                                                                    borderBottom: '1px solid rgba(150,150,150,0.1)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-border)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                            >
+                                                                {set.name}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Move search button natively below the input fields so it's not obscured by autocomplete */}
+                                        <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.5rem' }}>
+                                            <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '200px', padding: '0.75rem 1.5rem', margin: 0 }}>
+                                                {isSearching ? '...' : 'Search TCGdex'}
+                                            </button>
                                         </div>
                                     </div>
-                                    {/* Move search button natively below the input fields so it's not obscured by autocomplete */}
-                                    <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.5rem' }}>
-                                        <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '200px', padding: '0.75rem 1.5rem', margin: 0 }}>
-                                            {isSearching ? '...' : 'Search TCGdex'}
-                                        </button>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
+                                        <select
+                                            value={searchSort}
+                                            onChange={(e) => setSearchSort(e.target.value)}
+                                            style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
+                                        >
+                                            <option value="newest">Newest First (Release)</option>
+                                            <option value="oldest">Oldest First (Release)</option>
+                                            <option value="cardno-asc">Card No. Low-High</option>
+                                            <option value="cardno-desc">Card No. High-Low</option>
+                                        </select>
                                     </div>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
-                                    <select
-                                        value={searchSort}
-                                        onChange={(e) => setSearchSort(e.target.value)}
-                                        style={{ padding: '0.25rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--panel-border)' }}
-                                    >
-                                        <option value="newest">Newest First (Release)</option>
-                                        <option value="oldest">Oldest First (Release)</option>
-                                        <option value="cardno-asc">Card No. Low-High</option>
-                                        <option value="cardno-desc">Card No. High-Low</option>
-                                    </select>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '1rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '2rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
