@@ -831,13 +831,19 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             {selectedCard.rarity && (
                                                 <>
                                                     <strong style={{ color: 'var(--text-secondary)' }}>Rarity:</strong>
-                                                    <span>{selectedCard.rarity}</span>
+                                                    <span>{selectedCard.rarity.replace(/\b\w/g, char => char.toUpperCase())}</span>
                                                 </>
                                             )}
                                             {selectedCard.hp && (
                                                 <>
                                                     <strong style={{ color: 'var(--text-secondary)' }}>HP:</strong>
-                                                    <span>{selectedCard.hp} {selectedCard.types ? `(${selectedCard.types.join(', ')})` : ''}</span>
+                                                    <span>{selectedCard.hp}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.types && selectedCard.types.length > 0 && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Type:</strong>
+                                                    <span>{selectedCard.types.join(', ')}</span>
                                                 </>
                                             )}
                                             {selectedCard.stage && (
