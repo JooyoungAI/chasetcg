@@ -46,13 +46,27 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 const res = await fetch('https://api.tcgdex.net/v2/en/sets');
                 const data = await res.json();
 
+                // Explicit blacklist of Pocket / Promo sets requested by user
+                const BLOCKED_POCKET_SETS = [
+                    'Promo-A', 'Genetic Apex', 'Mythical Island', 'Space-Time Smackdown',
+                    'Triumphant Light', 'Shining Revelry', 'Celestial Guardians',
+                    'Extradimensional Crisis', 'Eevee Grove', 'Wisdom of Sea and Sky',
+                    'Secluded Springs', 'Deluxe Pack ex', 'Promo-B', 'Mega Rising',
+                    'Crimson Blaze', 'Fantasical Parade', 'Paldean Wonders'
+                ];
+
                 // Filter out Pocket sets from the autocomplete entirely
-                const validSets = (data || []).filter(s =>
-                    !s.name.toLowerCase().includes('pocket') &&
-                    !s.id.toLowerCase().includes('pocket') &&
-                    !/^A\d/.test(s.id) &&
-                    !s.id.startsWith('P-A')
-                );
+                const validSets = (data || []).filter(s => {
+                    const isExplicitlyBlocked = BLOCKED_POCKET_SETS.some(blocked =>
+                        s.name.toLowerCase().includes(blocked.toLowerCase())
+                    );
+
+                    return !isExplicitlyBlocked &&
+                        !s.name.toLowerCase().includes('pocket') &&
+                        !s.id.toLowerCase().includes('pocket') &&
+                        !/^A\d/.test(s.id) &&
+                        !s.id.startsWith('P-A');
+                });
 
                 setTcgdexSets(validSets);
             } catch (error) {
@@ -142,13 +156,30 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
             // TCGdex returns an array of objects: { id, localId, name, image }
             // Filter out items without an image, and rigorously exclude Pokemon TCG Pocket sets
+            const BLOCKED_POCKET_SETS = [
+                'Promo-A', 'Genetic Apex', 'Mythical Island', 'Space-Time Smackdown',
+                'Triumphant Light', 'Shining Revelry', 'Celestial Guardians',
+                'Extradimensional Crisis', 'Eevee Grove', 'Wisdom of Sea and Sky',
+                'Secluded Springs', 'Deluxe Pack ex', 'Promo-B', 'Mega Rising',
+                'Crimson Blaze', 'Fantasical Parade', 'Paldean Wonders'
+            ];
+
             let validCards = (data || []).filter(c => {
                 if (!c.image) return false;
+
+                // Cross-reference the cards returned against our valid Set Autocomplete list, or the strict block array
                 const setId = c.id.split('-')[0];
-                const isPocket = setId.toLowerCase().includes('pocket') ||
+                const matchedSet = tcgdexSets.find(s => s.id === setId);
+                const isExplicitlyBlocked = BLOCKED_POCKET_SETS.some(b => b.toLowerCase().includes(setId.toLowerCase()));
+
+                const isPocket = isExplicitlyBlocked ||
+                    setId.toLowerCase().includes('pocket') ||
                     /^A\d/.test(setId) ||
                     setId.startsWith('P-A') ||
-                    setId === 'PROMOP';
+                    setId === 'PROMOP' ||
+                    // Exclude the card if its set was completely purged from tcgdexSets during initial load
+                    (tcgdexSets.length > 0 && !matchedSet);
+
                 return !isPocket;
             });
 
