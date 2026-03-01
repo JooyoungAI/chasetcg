@@ -52,7 +52,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     'Triumphant Light', 'Shining Revelry', 'Celestial Guardians',
                     'Extradimensional Crisis', 'Eevee Grove', 'Wisdom of Sea and Sky',
                     'Secluded Springs', 'Deluxe Pack ex', 'Promo-B', 'Mega Rising',
-                    'Crimson Blaze', 'Fantasical Parade', 'Paldean Wonders'
+                    'Crimson Blaze', 'Fantasical Parade', 'Fantastical Parade', 'Paldean Wonders'
                 ];
 
                 // Filter out Pocket sets from the autocomplete entirely
@@ -161,7 +161,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 'Triumphant Light', 'Shining Revelry', 'Celestial Guardians',
                 'Extradimensional Crisis', 'Eevee Grove', 'Wisdom of Sea and Sky',
                 'Secluded Springs', 'Deluxe Pack ex', 'Promo-B', 'Mega Rising',
-                'Crimson Blaze', 'Fantasical Parade', 'Paldean Wonders'
+                'Crimson Blaze', 'Fantasical Parade', 'Fantastical Parade', 'Paldean Wonders'
             ];
 
             let validCards = (data || []).filter(c => {
@@ -170,11 +170,14 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 // Cross-reference the cards returned against our valid Set Autocomplete list, or the strict block array
                 const setId = c.id.split('-')[0];
                 const matchedSet = tcgdexSets.find(s => s.id === setId);
-                const isExplicitlyBlocked = BLOCKED_POCKET_SETS.some(b => b.toLowerCase().includes(setId.toLowerCase()));
+                const isExplicitlyBlocked = matchedSet ? BLOCKED_POCKET_SETS.some(b =>
+                    matchedSet.name.toLowerCase().includes(b.toLowerCase())
+                ) : false;
 
                 const isPocket = isExplicitlyBlocked ||
                     setId.toLowerCase().includes('pocket') ||
                     /^A\d/.test(setId) ||
+                    /^B\d/.test(setId) || // Catch pocket series matching B2, etc.
                     setId.startsWith('P-A') ||
                     setId === 'PROMOP' ||
                     // Exclude the card if its set was completely purged from tcgdexSets during initial load
