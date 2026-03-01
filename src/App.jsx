@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Catalog from './components/Catalog'
@@ -19,9 +19,11 @@ function CategoryPage({ items, addToCart }) {
 
   // If we are on the home page (no categoryId), show everything.
   // Otherwise, filter by the categoryId in the URL.
-  const displayedItems = categoryId
-    ? items.filter(item => item.category === categoryId)
-    : items
+  const displayedItems = useMemo(() => {
+    return categoryId
+      ? items.filter(item => item.category === categoryId)
+      : items;
+  }, [items, categoryId]);
 
   const categoryTitle = categoryId
     ? categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
