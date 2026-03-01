@@ -231,6 +231,17 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         }
     };
 
+    // Global listener for closing the modal via Escape key
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && selectedCard) {
+                setSelectedCard(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedCard]);
+
     const confirmAddCard = async (priceStr) => {
         if (!selectedCard) return;
 
@@ -781,17 +792,24 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
             {/* Card Detail Modal */}
             {selectedCard && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 9999, padding: '2rem'
-                }}>
-                    <div className="glass-panel" style={{
-                        maxWidth: '850px', width: '100%', padding: '2rem', display: 'flex',
-                        flexDirection: 'column', gap: '1.5rem', position: 'relative',
-                        maxHeight: '90vh', overflowY: 'auto'
-                    }}>
+                <div
+                    onClick={() => setSelectedCard(null)}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 9999, padding: '2rem'
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="glass-panel"
+                        style={{
+                            maxWidth: '850px', width: '100%', padding: '2rem', display: 'flex',
+                            flexDirection: 'column', gap: '1.5rem', position: 'relative',
+                            maxHeight: '90vh', overflowY: 'auto'
+                        }}
+                    >
                         <button
                             onClick={() => setSelectedCard(null)}
                             style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-primary)', zIndex: 10 }}
@@ -826,7 +844,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             {selectedCard.localId && (
                                                 <>
                                                     <strong style={{ color: 'var(--text-secondary)' }}>Card No:</strong>
-                                                    <span>{selectedCard.localId}{selectedCard.set?.cardCount?.total ? ` / ${selectedCard.set.cardCount.total}` : ''}</span>
+                                                    <span>{selectedCard.localId}</span>
                                                 </>
                                             )}
                                             {selectedCard.rarity && (
