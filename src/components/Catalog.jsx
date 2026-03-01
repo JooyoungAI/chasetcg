@@ -53,7 +53,7 @@ export default function Catalog({ items, addToCart }) {
             <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem', gap: '1rem', flexWrap: 'wrap' }}>
 
                 {/* Search Input */}
-                <div style={{ flex: '0 1 250px', maxWidth: '300px', width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', position: 'relative' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '0.75rem' }}>
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -67,13 +67,13 @@ export default function Catalog({ items, addToCart }) {
                     />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Sort By:</label>
+                <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Sort By:</label>
                     <select
                         id="sort-dropdown"
                         value={sortOption}
                         onChange={(e) => setSortOption(e.target.value)}
-                        style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}
+                        style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none', minWidth: '0' }}
                     >
                         <option value="date-new">Date: Newest to Oldest</option>
                         <option value="date-old">Date: Oldest to Newest</option>
