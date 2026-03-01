@@ -9,8 +9,17 @@ export default function Catalog({ items, addToCart, categoryId }) {
     const [rarityFilter, setRarityFilter] = useState('All');
     const ITEMS_PER_PAGE = 48;
 
+    const getItemRarity = (item) => {
+        if (item.rarity) return item.rarity;
+        if (item.description) {
+            const match = item.description.match(/A beautiful (.+?) card/);
+            if (match) return match[1];
+        }
+        return null;
+    };
+
     const uniqueRarities = React.useMemo(() => {
-        return [...new Set(items.map(item => item.rarity).filter(Boolean))].sort();
+        return [...new Set(items.map(getItemRarity).filter(Boolean))].sort();
     }, [items]);
 
     // Memoize the sorted items so we don't recalculate unless items, sortOption, or search changes
@@ -27,7 +36,7 @@ export default function Catalog({ items, addToCart, categoryId }) {
 
         // Filter by rarity if active
         if (rarityFilter !== 'All') {
-            itemsCopy = itemsCopy.filter(item => item.rarity === rarityFilter);
+            itemsCopy = itemsCopy.filter(item => getItemRarity(item) === rarityFilter);
         }
 
         switch (sortOption) {
