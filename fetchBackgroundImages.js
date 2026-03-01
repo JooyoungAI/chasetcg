@@ -50,7 +50,7 @@ async function fetchBackgroundImages() {
             const res = await fetch(`https://api.tcgdex.net/v2/en/cards?name=${encodeURIComponent(pokemon)}`);
             const cards = await res.json();
 
-            const validCards = cards.filter(c => c.image);
+            const validCards = cards.filter(c => c.image && !c.image.includes('/tcgp/'));
 
             // Pick 5 random cards for each of the ~30 pokemon to get ~150 pool
             if (validCards.length >= 5) {
