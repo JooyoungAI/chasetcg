@@ -251,10 +251,9 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         const matchedSet = tcgdexSets.find(s => s.id === setId);
         const setName = matchedSet ? matchedSet.name : 'Unknown Set';
 
-        // Optimistically set the required Add To Store fields (Full Name, Set Name) so the button works instantly
+        // Optimistically set the required Add To Store fields (Set Name) so the button works instantly
         setSelectedCard({
             ...card,
-            name: `${card.name} - ${setName}`,
             set: { name: setName },
             isBasic: true
         });
@@ -308,8 +307,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
             return;
         }
 
+        const fullName = `${selectedCard.name} - ${selectedCard.set?.name || 'Unknown Set'}`;
+
         const addResult = await addProduct({
-            name: selectedCard.name,
+            name: fullName,
             price: price,
             category: 'singles',
             description: `A single card from TCGdex. Set ID: ${selectedCard.id.split('-')[0]}`,
@@ -317,7 +318,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         });
 
         if (addResult.success) {
-            alert(`Added ${selectedCard.name} to store inventory for $${price.toFixed(2)}`);
+            alert(`Added ${fullName} to store inventory for $${price.toFixed(2)}`);
             setSelectedCard(null); // close modal
         } else {
             alert("Failed to add product: " + addResult.error);
@@ -994,6 +995,22 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                     )}
                                 </div>
 
+                                {!isLoadingCardDetails && selectedCard.abilities && selectedCard.abilities.length > 0 && (
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <strong style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.25rem' }}>Abilities</strong>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            {selectedCard.abilities.map((ability, idx) => (
+                                                <div key={idx} style={{ fontSize: '0.9rem', background: 'rgba(150,150,150,0.05)', padding: '0.5rem', borderRadius: '0.25rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                                                        <span style={{ color: '#ef4444' }}>{ability.type || 'Ability'}: {ability.name}</span>
+                                                    </div>
+                                                    {ability.effect && <div style={{ color: 'var(--text-secondary)' }}>{ability.effect}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {!isLoadingCardDetails && selectedCard.attacks && selectedCard.attacks.length > 0 && (
                                     <div style={{ marginTop: '0.5rem' }}>
                                         <strong style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.25rem' }}>Attacks</strong>
@@ -1018,7 +1035,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                     <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
                                         <button
                                             onClick={() => {
-                                                const price = window.prompt(`Set selling price for ${selectedCard.name} (e.g. 5.99):`);
+                                                const fullName = `${selectedCard.name} - ${selectedCard.set?.name || 'Unknown Set'}`;
+                                                const price = window.prompt(`Set selling price for ${fullName} (e.g. 5.99):`);
                                                 if (price) confirmAddCard(price);
                                             }}
                                             className="admin-submit-btn"
