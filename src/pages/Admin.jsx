@@ -467,10 +467,10 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                 </button>
             </div>
 
-            <div className="admin-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className={`admin-content ${activeTab === 'inventory' ? 'inventory-active' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                 {activeTab === 'search' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
+                    <div style={{ width: '100%' }}>
 
                         {/* TCGdex API Search Form */}
                         <section className="admin-section glass-panel search-active" style={{ padding: '1.5rem' }}>
@@ -543,8 +543,9 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             </button>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-                                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
+
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', borderTop: '1px solid var(--panel-border)', paddingTop: '1rem' }}>
+                                        <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Sort Results:</label>
                                         <select
                                             value={searchSort}
                                             onChange={(e) => setSearchSort(e.target.value)}

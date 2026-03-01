@@ -26,6 +26,12 @@
 }
 
 .admin-content {
+    display: block;
+    /* Removed grid restriction so TCG search can span 100% width natively */
+}
+
+/* Original grid mapping preserved specifically for the Inventory Tab only */
+.admin-content.inventory-active {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 2rem;
