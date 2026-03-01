@@ -41,8 +41,16 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
             try {
                 const res = await fetch('https://api.tcgdex.net/v2/en/sets');
                 const data = await res.json();
-                // data is chronologically ordered oldest -> newest by default in TCGdex
-                setTcgdexSets(data || []);
+
+                // Filter out Pocket sets from the autocomplete entirely
+                const validSets = (data || []).filter(s =>
+                    !s.name.toLowerCase().includes('pocket') &&
+                    !s.id.toLowerCase().includes('pocket') &&
+                    !/^A\d/.test(s.id) &&
+                    !s.id.startsWith('P-A')
+                );
+
+                setTcgdexSets(validSets);
             } catch (error) {
                 console.error("Failed to fetch TCGdex sets:", error);
             }
@@ -130,12 +138,15 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
             // TCGdex returns an array of objects: { id, localId, name, image }
             // Filter out items without an image, and rigorously exclude Pokemon TCG Pocket sets
-            const pocketPrefixes = ['A1', 'A1a', 'A2', 'A2a', 'A2b', 'A3', 'A3a', 'A3b', 'A4', 'A4a', 'P-A', 'PROMOP'];
-            let validCards = (data || []).filter(c =>
-                c.image &&
-                !c.id.includes('pocket') &&
-                !pocketPrefixes.some(prefix => c.id.startsWith(prefix + '-'))
-            );
+            let validCards = (data || []).filter(c => {
+                if (!c.image) return false;
+                const setId = c.id.split('-')[0];
+                const isPocket = setId.toLowerCase().includes('pocket') ||
+                    /^A\d/.test(setId) ||
+                    setId.startsWith('P-A') ||
+                    setId === 'PROMOP';
+                return !isPocket;
+            });
 
             // Fetch extra details for each to get the actual Set Name if we need to filter by it locally
             // Warning: The basic /cards search endpoint doesn't return `set.name`.
@@ -352,7 +363,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const paginatedProducts = processedProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     return (
-        <div className={`admin-dashboard ${activeTab === 'search' ? 'search-active' : ''}`}>
+        <div className="admin-dashboard">
             <header className="admin-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -421,8 +432,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
 
                         {/* TCGdex API Search Form */}
-                        <section className="admin-section glass-panel" style={{ padding: '1.5rem', width: '100%' }}>
-                            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        <section className="admin-section glass-panel search-active" style={{ padding: '1.5rem', width: '100%' }}>
+                            <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="11" cy="11" r="8"></circle>
@@ -435,7 +446,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                 </p>
                                 <form className="admin-form" onSubmit={handleSearchTcgDex}>
                                     <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', textAlign: 'left' }}>
                                             <input
                                                 type="text"
                                                 placeholder="Card Name (e.g. Pikachu)"
@@ -486,13 +497,13 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                             </div>
                                         </div>
                                         {/* Move search button natively below the input fields so it's not obscured by autocomplete */}
-                                        <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.5rem' }}>
-                                            <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '200px', padding: '0.75rem 1.5rem', margin: 0 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                                            <button type="submit" className="admin-submit-btn" disabled={isSearching || tcgdexSets.length === 0} style={{ width: '100%', maxWidth: '300px', padding: '0.75rem 1.5rem', margin: 0 }}>
                                                 {isSearching ? '...' : 'Search TCGdex'}
                                             </button>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
                                         <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sort Results:</label>
                                         <select
                                             value={searchSort}

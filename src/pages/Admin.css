@@ -4,13 +4,14 @@
     transition: max-width 0.3s ease;
 }
 
-.admin-dashboard.search-active {
+.admin-section.search-active {
     width: 96vw;
     max-width: 1800px;
     position: relative;
     left: 50%;
     transform: translateX(-50%);
-    /* guarantees 96vw size even if parents cap at 1280px */
+    box-sizing: border-box;
+    /* stretch only this box over its container */
 }
 
 .admin-header {
