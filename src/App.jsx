@@ -9,7 +9,7 @@ import Login from './pages/Login'
 import { catalogItems } from './data/mockItems'
 import { useProducts } from './hooks/useProducts'
 import { auth, isConfigured, db } from './firebase'
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore'
+import { collection, getDocs, writeBatch, doc, query, where, updateDoc } from 'firebase/firestore'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import './App.css'
 import './components/Navbar.css'
@@ -117,6 +117,29 @@ function App() {
 
     if (isConfigured) {
       runMigration();
+
+      // Auto-patch the broken Hidden Fates ETB Database Image
+      const patchHiddenFatesImage = async () => {
+        try {
+          const q = query(collection(db, 'products'), where('name', '==', 'Hidden Fates Elite Trainer Box'));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            for (const docSnapshot of snapshot.docs) {
+              const data = docSnapshot.data();
+              // Only patch if it's currently using the generic placeholder layout
+              if (data.image && data.image.includes('via.placeholder.com')) {
+                await updateDoc(docSnapshot.ref, {
+                  image: 'https://tcg.pokemon.com/assets/img/expansions/hidden-fates/products/elite-trainer-box.png'
+                });
+                console.log('Successfully patched Hidden Fates Image on mount!');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to auto-patch Hidden Fates image:', error);
+        }
+      };
+      patchHiddenFatesImage();
     }
   }, []);
 
