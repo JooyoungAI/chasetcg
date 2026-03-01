@@ -8,7 +8,8 @@ import Admin from './pages/Admin'
 import Login from './pages/Login'
 import { catalogItems } from './data/mockItems'
 import { useProducts } from './hooks/useProducts'
-import { auth, isConfigured } from './firebase'
+import { auth, isConfigured, db } from './firebase'
+import { collection, getDocs, writeBatch, doc } from 'firebase/firestore'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import './App.css'
 import './components/Navbar.css'
@@ -65,6 +66,59 @@ function App() {
       return () => unsubscribe()
     }
   }, [])
+
+  // Temporary Migration Hook
+  useEffect(() => {
+    const runMigration = async () => {
+      // Check localStorage to ensure this only runs once
+      if (localStorage.getItem('productsMigrated_v2') === 'true') return;
+
+      console.log("Starting Web Client Firestore cleanup and migration...");
+      try {
+        const productsCol = collection(db, 'products');
+
+        console.log("1. Deleting all existing products in Firestore...");
+        const existingDocs = await getDocs(productsCol);
+
+        let deleteBatch = writeBatch(db);
+        existingDocs.forEach((document) => {
+          deleteBatch.delete(doc(db, 'products', document.id));
+        });
+
+        await deleteBatch.commit();
+        console.log("Finished deleting old mock data.");
+
+        console.log("2. Uploading enriched catalogItems to Firestore...");
+        let insertBatch = writeBatch(db);
+
+        for (const item of catalogItems) {
+          const newDocRef = doc(productsCol);
+          insertBatch.set(newDocRef, {
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            description: item.description,
+            image: item.image,
+            createdAt: new Date()
+          });
+        }
+
+        await insertBatch.commit();
+        console.log("Successfully uploaded new mock data.");
+
+        // Mark as complete
+        localStorage.setItem('productsMigrated_v2', 'true');
+        console.log("Migration complete! Reload the page to see changes.");
+
+      } catch (error) {
+        console.error("Migration failed:", error);
+      }
+    };
+
+    if (isConfigured) {
+      runMigration();
+    }
+  }, []);
 
   const handleLogout = async () => {
     if (isConfigured && auth) {

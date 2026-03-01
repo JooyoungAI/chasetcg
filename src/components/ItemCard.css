@@ -46,10 +46,11 @@
 }
 
 .item-title {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--text-primary);
+    line-height: 1.3;
 }
 
 .item-desc {
