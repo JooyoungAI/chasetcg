@@ -116,8 +116,6 @@
 /* --- Mobile Menu Styles --- */
 .nav-menu-container {
     display: flex;
-    flex-grow: 1;
-    justify-content: space-between;
     align-items: center;
 }
 
@@ -158,8 +156,39 @@
 
 /* Breakpoint for Mobile/Tablet */
 @media (max-width: 820px) {
+    .nav-brand h1 {
+        font-size: 1.1rem;
+    }
+
+    .nav-actions {
+        gap: 0.5rem;
+    }
+
+    .admin-link {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-link svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .theme-toggle,
+    .cart-button {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .theme-toggle svg,
+    .cart-button svg {
+        width: 16px;
+        height: 16px;
+    }
+
     .mobile-menu-btn {
         display: flex;
+        margin-left: 0.5rem;
     }
 
     .nav-menu-container {
@@ -194,13 +223,5 @@
         border-bottom: 1px solid var(--panel-border);
         padding-bottom: 1.5rem;
         gap: 1.5rem;
-    }
-
-    .nav-actions {
-        flex-direction: row;
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-        gap: 1rem;
     }
 }

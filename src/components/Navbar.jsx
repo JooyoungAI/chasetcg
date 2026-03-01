@@ -28,16 +28,6 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
                 </Link>
             </div>
 
-            <button
-                className={`mobile-menu-btn ${isMobileMenuOpen ? 'open' : ''}`}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label="Toggle Navigation Menu"
-            >
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
-            </button>
-
             <div className={`nav-menu-container ${isMobileMenuOpen ? 'open' : ''}`}>
                 <div className="nav-categories">
                     {categories.map((cat) => (
@@ -53,7 +43,9 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
                         </Link>
                     ))}
                 </div>
+            </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div className="nav-actions">
                     {currentUser ? (
                         <>
@@ -100,7 +92,17 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
                         )}
                     </button>
                 </div>
+
+                <button
+                    className={`mobile-menu-btn ${isMobileMenuOpen ? 'open' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    aria-label="Toggle Navigation Menu"
+                >
+                    <span className="hamburger-line"></span>
+                    <span className="hamburger-line"></span>
+                    <span className="hamburger-line"></span>
+                </button>
             </div>
-        </nav>
+        </nav >
     );
 }
