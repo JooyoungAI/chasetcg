@@ -37,8 +37,13 @@ function CategoryPage({ items, addToCart }) {
   return (
     <>
       <header className="catalog-header">
-        <h2>{categoryTitle}</h2>
-        <p>Discover premium {categoryId || 'tech and lifestyle'} products crafted for excellence.</p>
+        <h2>
+          {categoryTitle}
+          <span style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginLeft: '0.75rem', fontWeight: 'normal' }}>
+            ({displayedItems.length} products)
+          </span>
+        </h2>
+        <p>Discover premium card singles and modern sealed product.</p>
       </header>
       {displayedItems.length === 0 ? (
         <p style={{ textAlign: 'center', marginTop: '2rem' }}>No products found in this category.</p>
@@ -207,21 +212,27 @@ function App() {
   // Bypasses pure Node script failures by securely piggybacking the logged-in Web Session
   useEffect(() => {
     const seedSingles = async () => {
-      if (localStorage.getItem('seed_100_ultra_rares_v2') === 'true' || !authUser) return;
+      if (localStorage.getItem('seed_500_mixed_singles_v1') === 'true' || !authUser) return;
 
-      console.log('Starting Client-Side High-Rarity Singles Seed...');
+      console.log('Starting Client-Side 500 Singles Seed (250 High Rarity + 250 Random)...');
 
       try {
         const rarities = ["Rare", "Double Rare", "Ultra Rare", "Secret Rare"];
         const promises = rarities.map(r =>
           fetch(`https://api.tcgdex.net/v2/en/cards?rarity=${encodeURIComponent(r)}`).then(res => res.json())
         );
+        promises.push(fetch(`https://api.tcgdex.net/v2/en/cards`).then(res => res.json())); // All cards for the 250 random
+
         const results = await Promise.all(promises);
 
-        let allCards = results.flat().filter(c => c.image && !c.id.includes("pocket") && !c.id.includes("Promo") && !c.id.endsWith("-p"));
-        allCards.sort(() => 0.5 - Math.random());
-        const selectedCards = allCards.slice(0, 100);
-        console.log(`Found ${selectedCards.length} matching TCGdex cards! Fetching details...`);
+        let highRarityCards = results.slice(0, 4).flat().filter(c => c.image && !c.id.includes("pocket") && !c.id.includes("Promo") && !c.id.endsWith("-p"));
+        let generalCards = results[4].filter(c => c.image && !c.id.includes("pocket") && !c.id.includes("Promo") && !c.id.endsWith("-p"));
+
+        highRarityCards.sort(() => 0.5 - Math.random());
+        generalCards.sort(() => 0.5 - Math.random());
+
+        const selectedCards = [...highRarityCards.slice(0, 250), ...generalCards.slice(0, 250)];
+        console.log(`Found ${selectedCards.length} matching TCGdex cards! Fetching extended details... (This will take a minute)`);
 
         const fullCards = [];
         for (const card of selectedCards) {
@@ -266,9 +277,9 @@ function App() {
           await insertBatch.commit();
         }
 
-        console.log(`Migration Complete! Instilled ${count} high-rarity single cards into Firestore!`);
-        localStorage.setItem('seed_100_ultra_rares_v2', 'true');
-        alert('Database Sync Complete: 100 new High-Rarity Singles added!');
+        console.log(`Migration Complete! Instilled ${count} single cards into Firestore!`);
+        localStorage.setItem('seed_500_mixed_singles_v1', 'true');
+        alert('Database Sync Complete: 500 new Singles added (250 High Rarity + 250 Random)!');
 
       } catch (err) {
         console.error("Failed to client-seed products:", err);
