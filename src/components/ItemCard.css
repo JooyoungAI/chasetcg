@@ -54,7 +54,7 @@
 }
 
 .item-desc {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     margin-bottom: 1.5rem;
     flex-grow: 1;

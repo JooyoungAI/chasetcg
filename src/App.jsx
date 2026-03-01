@@ -71,7 +71,7 @@ function App() {
   useEffect(() => {
     const runMigration = async () => {
       // Check localStorage to ensure this only runs once
-      if (localStorage.getItem('productsMigrated_v2') === 'true') return;
+      if (localStorage.getItem('productsMigrated_v3') === 'true') return;
 
       console.log("Starting Web Client Firestore cleanup and migration...");
       try {
@@ -107,7 +107,7 @@ function App() {
         console.log("Successfully uploaded new mock data.");
 
         // Mark as complete
-        localStorage.setItem('productsMigrated_v2', 'true');
+        localStorage.setItem('productsMigrated_v3', 'true');
         console.log("Migration complete! Reload the page to see changes.");
 
       } catch (error) {
