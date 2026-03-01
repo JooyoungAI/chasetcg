@@ -81,8 +81,46 @@
     border-radius: 0.5rem;
     font-weight: 500;
     transition: background-color 0.2s;
+    text-align: center;
 }
 
 .add-to-cart-btn:hover {
     background: var(--accent-hover);
+}
+
+/* Mobile Adjustments for 2-Column Grid */
+@media (max-width: 640px) {
+    .item-content {
+        padding: 1rem;
+    }
+
+    .item-image-wrapper {
+        height: 200px;
+        padding: 0.5rem;
+    }
+
+    .item-title {
+        font-size: 0.9rem;
+    }
+
+    .item-desc {
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .item-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .item-price {
+        font-size: 1.1rem;
+    }
+
+    .add-to-cart-btn {
+        width: 100%;
+        padding: 0.4rem;
+        font-size: 0.85rem;
+    }
 }
