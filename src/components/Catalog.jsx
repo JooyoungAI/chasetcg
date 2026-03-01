@@ -5,11 +5,18 @@ import './Catalog.css';
 export default function Catalog({ items, addToCart }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState('date-new'); // Default to newest first
+    const [searchQuery, setSearchQuery] = useState('');
     const ITEMS_PER_PAGE = 50;
 
-    // Memoize the sorted items so we don't recalculate unless items or sortOption changes
+    // Memoize the sorted items so we don't recalculate unless items, sortOption, or search changes
     const sortedItems = React.useMemo(() => {
-        const itemsCopy = [...items]; // Clone array to avoid mutating props
+        let itemsCopy = [...items]; // Clone array to avoid mutating props
+
+        // Filter by search query first
+        if (searchQuery.trim()) {
+            const lowerQuery = searchQuery.toLowerCase();
+            itemsCopy = itemsCopy.filter(item => item.name.toLowerCase().includes(lowerQuery));
+        }
 
         switch (sortOption) {
             case 'price-low':
@@ -36,12 +43,28 @@ export default function Catalog({ items, addToCart }) {
     // Reset to page 1 if criteria changes
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [items, sortOption]);
+    }, [items, sortOption, searchQuery]);
 
     return (
         <div>
             {/* Sorting Controls */}
-            <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', padding: '0 1rem' }}>
+            <div className="catalog-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem', gap: '1rem', flexWrap: 'wrap' }}>
+
+                {/* Search Input */}
+                <div style={{ flex: '1 1 250px', maxWidth: '400px', display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '0.75rem' }}>
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', outline: 'none' }}
+                    />
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <label htmlFor="sort-dropdown" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Sort By:</label>
                     <select
@@ -61,13 +84,17 @@ export default function Catalog({ items, addToCart }) {
             </div>
 
             <section className="catalog-grid">
-                {paginatedItems.map(item => (
+                {paginatedItems.length > 0 ? paginatedItems.map(item => (
                     <ItemCard
                         key={item.id}
                         item={item}
                         addToCart={addToCart}
                     />
-                ))}
+                )) : (
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)' }}>
+                        <p style={{ fontSize: '1.2rem' }}>No products found matching "{searchQuery}"</p>
+                    </div>
+                )}
             </section>
 
             {totalPages > 1 && (
