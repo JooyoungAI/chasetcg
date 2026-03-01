@@ -26,7 +26,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     // Search TCGdex States
     const [searchCardName, setSearchCardName] = useState('');
     const [searchSetName, setSearchSetName] = useState('');
-    const [searchSort, setSearchSort] = useState('cardno-asc'); // 'cardno-asc' or 'cardno-desc'
+    const [searchSort, setSearchSort] = useState('newest'); // 'newest', 'oldest', 'cardno-asc', or 'cardno-desc'
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [tcgdexSets, setTcgdexSets] = useState([]);
@@ -568,7 +568,8 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                                                                 style={{
                                                                     padding: '0.5rem', cursor: 'pointer',
                                                                     borderBottom: '1px solid rgba(150,150,150,0.1)',
-                                                                    background: highlightedIndex === idx ? 'var(--panel-border)' : 'transparent'
+                                                                    background: highlightedIndex === idx ? 'var(--accent)' : 'transparent',
+                                                                    color: highlightedIndex === idx ? '#fff' : 'inherit'
                                                                 }}
                                                                 onMouseEnter={() => setHighlightedIndex(idx)}
                                                             >
