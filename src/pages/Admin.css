@@ -5,13 +5,15 @@
 }
 
 .admin-section.search-active {
-    width: 96vw;
+    width: 98vw;
     max-width: 1800px;
     position: relative;
     left: 50%;
-    transform: translateX(-50%);
+    right: 50%;
+    margin-left: -49vw;
+    margin-right: -49vw;
     box-sizing: border-box;
-    /* stretch only this box over its container */
+    /* robust full-bleed out of centered container */
 }
 
 .admin-header {

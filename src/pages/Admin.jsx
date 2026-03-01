@@ -473,7 +473,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
 
                         {/* TCGdex API Search Form */}
-                        <section className="admin-section glass-panel search-active" style={{ padding: '1.5rem', width: '100%' }}>
+                        <section className="admin-section glass-panel search-active" style={{ padding: '1.5rem' }}>
                             <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -561,7 +561,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
 
                             {/* Search Results Display */}
                             {searchResults.length > 0 && (
-                                <div style={{ marginTop: '2rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
+                                <div style={{ marginTop: '2rem', maxHeight: '650px', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '1rem', paddingRight: '0.5rem' }}>
                                     {searchResults.map(card => (
                                         <div
                                             key={card.id}
