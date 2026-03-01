@@ -36,7 +36,7 @@ export default function Catalog({ items, addToCart }) {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         disabled={validCurrentPage === 1}
-                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', background: validCurrentPage === 1 ? 'var(--glass-border)' : 'var(--accent-color)', color: 'white', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
                     >
                         Previous
                     </button>
@@ -49,7 +49,7 @@ export default function Catalog({ items, addToCart }) {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         disabled={validCurrentPage === totalPages}
-                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', background: validCurrentPage === totalPages ? 'var(--glass-border)' : 'var(--accent-color)', color: 'white', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
                     >
                         Next
                     </button>

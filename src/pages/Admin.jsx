@@ -280,7 +280,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={validCurrentPage === 1}
-                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: 'none', background: validCurrentPage === 1 ? '#cbd5e1' : '#3b82f6', color: 'white', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === 1 ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === 1 ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === 1 ? 'not-allowed' : 'pointer' }}
                             >
                                 Previous
                             </button>
@@ -290,7 +290,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={validCurrentPage === totalPages}
-                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: 'none', background: validCurrentPage === totalPages ? '#cbd5e1' : '#3b82f6', color: 'white', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                style={{ padding: '0.5rem 1rem', borderRadius: '0.25rem', border: '1px solid var(--panel-border)', background: validCurrentPage === totalPages ? 'transparent' : 'var(--panel-bg)', color: validCurrentPage === totalPages ? 'var(--text-secondary)' : 'var(--text-primary)', cursor: validCurrentPage === totalPages ? 'not-allowed' : 'pointer' }}
                             >
                                 Next
                             </button>
