@@ -39,9 +39,6 @@ function CategoryPage({ items, addToCart }) {
       <header className="catalog-header">
         <h2>
           {categoryTitle}
-          <span style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginLeft: '0.75rem', fontWeight: 'normal' }}>
-            ({displayedItems.length} products)
-          </span>
         </h2>
         <p>Discover premium card singles and modern sealed product.</p>
       </header>

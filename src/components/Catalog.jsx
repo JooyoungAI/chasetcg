@@ -6,7 +6,7 @@ export default function Catalog({ items, addToCart }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState('date-new'); // Default to newest first
     const [searchQuery, setSearchQuery] = useState('');
-    const ITEMS_PER_PAGE = 50;
+    const ITEMS_PER_PAGE = 48;
 
     // Memoize the sorted items so we don't recalculate unless items, sortOption, or search changes
     const sortedItems = React.useMemo(() => {
@@ -65,6 +65,10 @@ export default function Catalog({ items, addToCart }) {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '0.5rem', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--text-primary)', outline: 'none' }}
                     />
+                </div>
+
+                <div style={{ flex: '1 1 auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <strong style={{ color: 'black', fontSize: '1.1rem' }}>{sortedItems.length} Products</strong>
                 </div>
 
                 <div style={{ flex: '1 1 250px', maxWidth: '260px', width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
