@@ -907,21 +907,30 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
                             {/* Left Column: Image */}
                             <div style={{ flex: '1 1 300px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-                                <img
-                                    src={selectedCard.image ? `${selectedCard.image}/high.webp` : ''}
-                                    alt={selectedCard.name}
-                                    style={{ width: '100%', maxWidth: '350px', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}
-                                    onError={(e) => {
-                                        // Some cards lack the specific /high.webp extension format, so we gracefully cascade downwards
-                                        if (e.target.src.endsWith('/high.webp')) {
-                                            e.target.src = `${selectedCard.image}/low.webp`;
-                                        } else if (e.target.src.endsWith('/low.webp')) {
-                                            e.target.src = `${selectedCard.image}/high.png`;
-                                        } else if (e.target.src.endsWith('/high.png')) {
-                                            e.target.src = `${selectedCard.image}/low.png`;
-                                        }
-                                    }}
-                                />
+                                <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
+                                    {/* Instantly loaded low-res cached placeholder */}
+                                    <img
+                                        src={selectedCard.image ? `${selectedCard.image}/low.webp` : ''}
+                                        alt=""
+                                        style={{ width: '100%', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', display: 'block' }}
+                                    />
+                                    {/* High-res image streams in natively over top */}
+                                    <img
+                                        src={selectedCard.image ? `${selectedCard.image}/high.webp` : ''}
+                                        alt={selectedCard.name}
+                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '0.5rem', display: 'block' }}
+                                        onError={(e) => {
+                                            // Some cards lack the specific /high.webp extension format, so we gracefully cascade downwards
+                                            if (e.target.src.endsWith('/high.webp')) {
+                                                e.target.src = `${selectedCard.image}/low.webp`;
+                                            } else if (e.target.src.endsWith('/low.webp')) {
+                                                e.target.src = `${selectedCard.image}/high.png`;
+                                            } else if (e.target.src.endsWith('/high.png')) {
+                                                e.target.src = `${selectedCard.image}/low.png`;
+                                            }
+                                        }}
+                                    />
+                                </div>
                             </div>
 
                             {/* Right Column: Details */}
