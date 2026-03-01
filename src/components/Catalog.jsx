@@ -35,7 +35,7 @@ export default function Catalog({ items, addToCart }) {
             default:
                 return itemsCopy.reverse(); // Reverse fetch order (newest first)
         }
-    }, [items, sortOption]);
+    }, [items, sortOption, searchQuery]);
 
     const totalPages = Math.ceil(sortedItems.length / ITEMS_PER_PAGE);
     const validCurrentPage = Math.min(currentPage, totalPages > 0 ? totalPages : 1);
