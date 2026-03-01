@@ -6,10 +6,39 @@
     width: 100%;
 }
 
+.catalog-counter {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 @media (max-width: 640px) {
     .catalog-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
         padding: 1rem 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .catalog-controls {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1rem !important;
+    }
+
+    .catalog-counter {
+        position: static !important;
+        transform: none !important;
+        margin: 0.5rem 0;
+    }
+
+    .catalog-controls>div:last-child {
+        align-items: center !important;
+        width: 100%;
     }
 }

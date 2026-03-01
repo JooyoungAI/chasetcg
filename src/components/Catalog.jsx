@@ -90,8 +90,8 @@ export default function Catalog({ items, addToCart, categoryId }) {
                     />
                 </div>
 
-                {/* Product Counter Centered */}
-                <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {/* Product Counter Responsive */}
+                <div className="catalog-counter">
                     <strong style={{ color: 'black', fontSize: '1.1rem' }}>{sortedItems.length} Products</strong>
                 </div>
 
