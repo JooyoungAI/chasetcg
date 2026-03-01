@@ -1,16 +1,13 @@
 .admin-dashboard {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 100%;
     margin: 0 auto;
-    transition: max-width 0.3s ease;
 }
 
 .admin-section.search-active {
-    width: 98vw;
-    max-width: 1800px;
-    margin-left: calc(-49vw + 50%);
-    margin-right: calc(-49vw + 50%);
+    width: 100%;
     box-sizing: border-box;
-    /* pure calculated viewport expand without absolute left positioning that breaks layout */
+    /* pure relative width ensuring the container strictly stays on-screen, centered. */
 }
 
 .admin-header {
