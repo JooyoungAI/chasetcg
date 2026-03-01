@@ -31,6 +31,7 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
     const [isSearching, setIsSearching] = useState(false);
     const [tcgdexSets, setTcgdexSets] = useState([]);
     const [selectedCard, setSelectedCard] = useState(null);
+    const [isLoadingCardDetails, setIsLoadingCardDetails] = useState(false);
 
     // Custom Autocomplete State for Set Name
     const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -216,8 +217,18 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
         setSearchResults(resorted);
     }, [searchSort]);
 
-    const handleCardClick = (card) => {
-        setSelectedCard(card);
+    const handleCardClick = async (card) => {
+        setIsLoadingCardDetails(true);
+        setSelectedCard({ ...card, isBasic: true }); // Show basic info immediately while loading full details
+        try {
+            const res = await fetch(`https://api.tcgdex.net/v2/en/cards/${card.id}`);
+            const fullDetails = await res.json();
+            setSelectedCard(fullDetails);
+        } catch (error) {
+            console.error("Failed to load full card details", error);
+        } finally {
+            setIsLoadingCardDetails(false);
+        }
     };
 
     const confirmAddCard = async (priceStr) => {
@@ -776,43 +787,123 @@ export default function Admin({ products, addProduct, removeProduct, updateProdu
                     zIndex: 9999, padding: '2rem'
                 }}>
                     <div className="glass-panel" style={{
-                        maxWidth: '500px', width: '100%', padding: '2rem', display: 'flex',
-                        flexDirection: 'column', alignItems: 'center', gap: '1.5rem', position: 'relative'
+                        maxWidth: '850px', width: '100%', padding: '2rem', display: 'flex',
+                        flexDirection: 'column', gap: '1.5rem', position: 'relative',
+                        maxHeight: '90vh', overflowY: 'auto'
                     }}>
                         <button
                             onClick={() => setSelectedCard(null)}
-                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-primary)', zIndex: 10 }}
                         >&times;</button>
 
-                        <h2 style={{ margin: 0, textAlign: 'center' }}>{selectedCard.name}</h2>
+                        <h2 style={{ margin: 0, paddingRight: '2rem' }}>{selectedCard.name}</h2>
 
-                        <img
-                            src={`${selectedCard.image}/high.webp`}
-                            alt={selectedCard.name}
-                            style={{ width: '100%', maxWidth: '350px', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}
-                        />
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                            {/* Left Column: Image */}
+                            <div style={{ flex: '1 1 300px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+                                <img
+                                    src={selectedCard.image ? `${selectedCard.image}/high.webp` : ''}
+                                    alt={selectedCard.name}
+                                    style={{ width: '100%', maxWidth: '350px', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.3)' }}
+                                />
+                            </div>
 
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
-                            View details for {selectedCard.name}. Set your selling price below to add it to your store.
-                        </p>
+                            {/* Right Column: Details */}
+                            <div style={{ flex: '2 1 300px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                        <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
-                            <button
-                                onClick={() => {
-                                    const price = window.prompt(`Set selling price for ${selectedCard.name} (e.g. 5.99):`);
-                                    if (price) confirmAddCard(price);
-                                }}
-                                className="admin-submit-btn"
-                                style={{ flex: 1, margin: 0 }}
-                            >
-                                Add to Store
-                            </button>
-                            <button
-                                onClick={() => setSelectedCard(null)}
-                                style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}
-                            >
-                                Cancel
-                            </button>
+                                {isLoadingCardDetails ? (
+                                    <div style={{ padding: '2rem 0', color: 'var(--text-secondary)' }}>Loading extended card details...</div>
+                                ) : (
+                                    <>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.5rem 1rem', fontSize: '0.95rem' }}>
+                                            {selectedCard.set?.name && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Set:</strong>
+                                                    <span>{selectedCard.set.name}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.localId && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Card No:</strong>
+                                                    <span>{selectedCard.localId}{selectedCard.set?.cardCount?.total ? ` / ${selectedCard.set.cardCount.total}` : ''}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.rarity && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Rarity:</strong>
+                                                    <span>{selectedCard.rarity}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.hp && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>HP:</strong>
+                                                    <span>{selectedCard.hp} {selectedCard.types ? `(${selectedCard.types.join(', ')})` : ''}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.stage && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Stage:</strong>
+                                                    <span>{selectedCard.stage}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.illustrator && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Illustrator:</strong>
+                                                    <span>{selectedCard.illustrator}</span>
+                                                </>
+                                            )}
+                                            {selectedCard.updated && (
+                                                <>
+                                                    <strong style={{ color: 'var(--text-secondary)' }}>Database Updated:</strong>
+                                                    <span>{new Date(selectedCard.updated).toLocaleDateString()}</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {selectedCard.attacks && selectedCard.attacks.length > 0 && (
+                                            <div style={{ marginTop: '0.5rem' }}>
+                                                <strong style={{ color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '0.25rem' }}>Attacks</strong>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                    {selectedCard.attacks.map((attack, idx) => (
+                                                        <div key={idx} style={{ fontSize: '0.9rem', background: 'rgba(150,150,150,0.05)', padding: '0.5rem', borderRadius: '0.25rem' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                                                                <span>{attack.name}</span>
+                                                                {attack.damage && <span>{attack.damage}</span>}
+                                                            </div>
+                                                            {attack.effect && <div style={{ color: 'var(--text-secondary)' }}>{attack.effect}</div>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div style={{ marginTop: 'auto', paddingTop: '1.5rem' }}>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                                        Set your selling price to add this card to your store.
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+                                        <button
+                                            onClick={() => {
+                                                const price = window.prompt(`Set selling price for ${selectedCard.name} (e.g. 5.99):`);
+                                                if (price) confirmAddCard(price);
+                                            }}
+                                            className="admin-submit-btn"
+                                            style={{ flex: 1, margin: 0, padding: '0.75rem' }}
+                                            disabled={isLoadingCardDetails}
+                                        >
+                                            Add to Store
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedCard(null)}
+                                            style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', padding: '0.75rem' }}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
