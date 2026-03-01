@@ -24,12 +24,23 @@ export default function Navbar({ cart, theme, toggleTheme, toggleCart, currentUs
         <nav className="navbar glass-panel">
             <div className="nav-brand">
                 <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <img
-                        src="https://assets.tcgdex.net/en/me/me02.5/276/low.webp"
-                        alt="Brand Logo"
-                        style={{ height: '40px', width: 'auto', borderRadius: '4px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
-                    />
                     <h1 style={{ margin: 0 }}>ChaseTCG</h1>
+                    <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <img
+                            src="https://assets.tcgdex.net/en/me/me02.5/276/low.webp"
+                            alt="Brand Logo"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', transform: 'scale(1.8)' }}
+                        />
+                    </div>
                 </Link>
             </div>
 
